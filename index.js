@@ -14,12 +14,19 @@ require("dotenv").config();
 
 // Multiple bot configuration for parallel caching
 const CACHE_BOTS = {
+    bot3: {
+        token: process.env.BOT3_TOKEN,
+        cacheCategoryIds: process.env.BOT3_CATEGORIES.split(","),
+        databaseChannelId: process.env.BOT3_DATABASE,
+        guildId: process.env.BOT3_GUILD,
+        isPrimary: true
+    },
     bot1: {
         token: process.env.BOT1_TOKEN,
         cacheCategoryIds: process.env.BOT1_CATEGORIES.split(","), 
         databaseChannelId: process.env.BOT1_DATABASE,
         guildId: process.env.BOT1_GUILD,
-        isPrimary: true
+        isPrimary: false
     },
     bot2: {
         token: process.env.BOT2_TOKEN,
