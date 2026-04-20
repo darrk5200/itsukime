@@ -1862,14 +1862,14 @@
                             left: 0;
                             right: 0;
                             padding: 2rem 0.85rem 0.65rem;
-                            background: linear-gradient(to top, rgba(0,0,0,0.9) 55%, transparent);
+                            background: linear-gradient(to top, rgba(0,0,0,0.54) 55%, transparent);
                         }
 
                         .cw-anime-name {
                             font-size: 0.9rem;
                             font-weight: 700;
                             color: #fff;
-                            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+                            text-shadow: 0 1px 4px rgba(0,0,0,0.48);
                             white-space: nowrap;
                             overflow: hidden;
                             text-overflow: ellipsis;
@@ -2573,7 +2573,7 @@
                                          alt="${entry.animeName}"
                                          class="cw-thumbnail"
                                          loading="lazy"
-                                         onerror="this.src='https://via.placeholder.com/640x360?text=No+Image'">
+                                         onerror="this.src='${entry.imageUrl || 'https://via.placeholder.com/640x360?text=No+Image'}'">
                                     <div class="cw-overlay">
                                         <div class="cw-anime-name">${entry.animeName}</div>
                                         <div class="cw-ep-label">${epNum}${entry.episodeTitle ? ' · ' + entry.episodeTitle : ''}</div>
@@ -2582,6 +2582,23 @@
                                         <div class="cw-progress-bar" style="width: ${progress}%"></div>
                                     </div>
                                 `;
+
+                                // Lazily resolve TMDB episode thumbnail for old entries missing it
+                                if (!entry.episodeThumbnail && entry.channelName) {
+                                    const img = card.querySelector('.cw-thumbnail');
+                                    fetch(`/api/videos/${encodeURIComponent(entry.channelName)}`)
+                                        .then(r => r.ok ? r.json() : null)
+                                        .then(data => {
+                                            if (!data || !data.videos) return;
+                                            const vid = data.videos.find(v => v.episode === entry.episodeNumber);
+                                            if (vid && vid.tmdbThumbnail) {
+                                                img.src = vid.tmdbThumbnail;
+                                                entry.episodeThumbnail = vid.tmdbThumbnail;
+                                                saveWatchHistory();
+                                            }
+                                        })
+                                        .catch(() => {});
+                                }
 
                                 card.addEventListener('click', (e) => {
                                     e.stopPropagation();
@@ -3409,7 +3426,7 @@
                                     video.episode || 1,
                                     video.title,
                                     metadata.imageUrl,
-                                    video.thumbnail || null
+                                    video.tmdbThumbnail || video.thumbnail || null
                                 );
                             }
 
@@ -4210,7 +4227,7 @@
                             </div>
                             <div id="welcomePopupBody">
                                 <h2 id="welcomePopupTitle">Welcome to Itsukime</h2>
-                                <p id="welcomePopupDesc">HD Streaming, Adless Experience, Seasonal Anime, limitless screentime!</p>
+                                <p id="welcomePopupDesc">HD Streaming, Adless Experience, Seasonal Anime & Limitless screentime!</p>
                                 <button id="welcomeCloseBtn">Peak!</button>
                             </div>
                         </div>
