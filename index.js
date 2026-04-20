@@ -16,21 +16,21 @@
                 const CACHE_BOTS = {
                     bot3: {
                         token: process.env.BOT3_TOKEN,
-                        cacheCategoryIds: process.env.BOT3_CATEGORIES.split(","),
+                        cacheCategoryIds: process.env.BOT3_CATEGORIES ? process.env.BOT3_CATEGORIES.split(",") : [],
                         databaseChannelId: process.env.BOT3_DATABASE,
                         guildId: process.env.BOT3_GUILD,
                         isPrimary: true
                     },
                     bot1: {
                         token: process.env.BOT1_TOKEN,
-                        cacheCategoryIds: process.env.BOT1_CATEGORIES.split(","), 
+                        cacheCategoryIds: process.env.BOT1_CATEGORIES ? process.env.BOT1_CATEGORIES.split(",") : [],
                         databaseChannelId: process.env.BOT1_DATABASE,
                         guildId: process.env.BOT1_GUILD,
                         isPrimary: false
                     },
                     bot2: {
                         token: process.env.BOT2_TOKEN,
-                        cacheCategoryIds: process.env.BOT2_CATEGORIES.split(","),
+                        cacheCategoryIds: process.env.BOT2_CATEGORIES ? process.env.BOT2_CATEGORIES.split(",") : [],
                         databaseChannelId: process.env.BOT2_DATABASE,
                         guildId: process.env.BOT2_GUILD,
                         isPrimary: false
