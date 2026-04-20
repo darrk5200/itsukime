@@ -1691,6 +1691,29 @@
                             letter-spacing: 1px;
                         }
 
+                        .ra-scroll-btn {
+                            background: none;
+                            border: 1px solid var(--border-color, #333);
+                            border-radius: 50%;
+                            width: 28px;
+                            height: 28px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 1.2rem;
+                            line-height: 1;
+                            color: var(--text-main, #ccc);
+                            cursor: pointer;
+                            transition: background 0.2s, border-color 0.2s, color 0.2s;
+                            flex-shrink: 0;
+                            padding: 0;
+                        }
+                        .ra-scroll-btn:hover {
+                            background: var(--accent, #e63946);
+                            border-color: var(--accent, #e63946);
+                            color: #fff;
+                        }
+
                         .recently-added-row {
                             display: flex;
                             gap: 0.75rem;
@@ -2139,6 +2162,7 @@
                         <div class="recently-added-section" id="recentlyAddedSection">
                             <div class="section-header">
                                 <span class="section-label">Added Today</span>
+                                <button class="ra-scroll-btn" id="raScrollBtn" aria-label="Scroll right">&#8250;</button>
                             </div>
                             <div class="recently-added-row" id="recentlyAddedRow"></div>
                         </div>
@@ -2442,19 +2466,18 @@
                         setInterval(updateCurrentProgress, 5000);
 
                         // ── Recently Added Section (horizontal draggable) ─────────────────
-                        function buildRecentlyAddedSection() {
+                        let serverRecentlyAdded = null;
+
+                        function buildRecentlyAddedSection(serverList) {
                             const section = document.getElementById('recentlyAddedSection');
                             const row = document.getElementById('recentlyAddedRow');
                             if (!section || !row) return;
 
-                            const now = Date.now();
-                            const cutoff = now - 24 * 60 * 60 * 1000; // 24 hours
+                            if (serverList) serverRecentlyAdded = serverList;
 
-                            const recentEntries = Object.entries(animeMetadata)
-                                .filter(([_, meta]) => meta && meta.timestamp && meta.timestamp > cutoff)
-                                .sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+                            const entries = serverRecentlyAdded;
 
-                            if (recentEntries.length === 0) {
+                            if (!entries || entries.length === 0) {
                                 section.classList.add('hidden');
                                 return;
                             }
@@ -2462,20 +2485,22 @@
                             section.classList.remove('hidden');
                             row.innerHTML = '';
 
-                            recentEntries.forEach(([channelName, meta]) => {
+                            entries.forEach((item) => {
+                                const channelName = item.channelName;
+                                const meta = animeMetadata[channelName] || item;
                                 const card = document.createElement('div');
                                 card.className = 'ra-card';
 
-                                const genreTags = (meta.genres || []).slice(0, 2)
+                                const genreTags = (item.genres || []).slice(0, 2)
                                     .map(g => `<span class="genre-tag">${g}</span>`).join('');
 
                                 card.innerHTML = `
-                                    <img src="${meta.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}"
-                                         alt="${(meta.name || channelName).replace(/"/g, '&quot;')}"
+                                    <img src="${item.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}"
+                                         alt="${(item.name || channelName).replace(/"/g, '&quot;')}"
                                          loading="lazy"
                                          onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
                                     <div class="ra-info">
-                                        <div class="ra-name">${meta.name || channelName}</div>
+                                        <div class="ra-name">${item.name || channelName}</div>
                                         <div class="anime-genres" style="margin-top:0.25rem">${genreTags}</div>
                                     </div>
                                 `;
@@ -2509,6 +2534,18 @@
                             row.querySelectorAll('.ra-card').forEach(card => {
                                 card.addEventListener('click', (e) => { if (dragged) e.stopImmediatePropagation(); }, true);
                             });
+
+                            // "> " scroll button
+                            const scrollBtn = document.getElementById('raScrollBtn');
+                            if (scrollBtn) {
+                                scrollBtn.onclick = () => {
+                                    const firstCard = row.querySelector('.ra-card');
+                                    if (!firstCard) return;
+                                    const cardWidth = firstCard.offsetWidth;
+                                    const gap = 12; // 0.75rem gap
+                                    row.scrollBy({ left: (cardWidth + gap) * 3, behavior: 'smooth' });
+                                };
+                            }
                         }
 
                         function displayContinueWatching() {
@@ -3407,6 +3444,13 @@
                                 channelNames = data.channels;
                                 debouncedSeasonalRebuild();
                             }
+                            if (data.recentlyAdded) {
+                                if (!homeGrid.classList.contains('hidden')) {
+                                    buildRecentlyAddedSection(data.recentlyAdded);
+                                } else {
+                                    serverRecentlyAdded = data.recentlyAdded;
+                                }
+                            }
                         });
 
                         // Build home grid cards dynamically if the page loaded before metadata was ready
@@ -3552,7 +3596,7 @@
                                     <img src="${imageUrl}" alt="${displayName}" class="seasonal-card-image" loading="lazy" onerror="this.src='https://via.placeholder.com/640x360?text=No+Image'">
                                     <div class="seasonal-card-overlay">
                                         <span class="seasonal-card-name">${displayName}</span>
-                                        <button class="seasonal-watch-btn" data-channel="${channelName}">Watch</button>
+                                        <button class="seasonal-watch-btn" data-channel="${channelName}">Start Watching</button>
                                     </div>
                                 `;
 
@@ -4059,6 +4103,131 @@
                             });
 
                             setPaused(true);
+                        })();
+                    </script>
+
+                    <!-- Welcome Popup -->
+                    <style>
+                        #welcomeOverlay {
+                            position: fixed;
+                            inset: 0;
+                            background: rgba(0, 0, 0, 0.72);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            z-index: 9999;
+                            padding: 1rem;
+                            backdrop-filter: blur(4px);
+                            -webkit-backdrop-filter: blur(4px);
+                            animation: wOverlayIn 0.25s ease;
+                        }
+                        #welcomeOverlay.hidden {
+                            display: none;
+                        }
+                        @keyframes wOverlayIn {
+                            from { opacity: 0; }
+                            to   { opacity: 1; }
+                        }
+                        #welcomePopup {
+                            background: var(--bg-card, #1a1a2e);
+                            border: 1px solid var(--border-color, #333);
+                            border-radius: 16px;
+                            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+                            display: flex;
+                            flex-direction: row;
+                            align-items: stretch;
+                            max-width: 560px;
+                            width: 100%;
+                            overflow: hidden;
+                            animation: wPopupIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+                        }
+                        @keyframes wPopupIn {
+                            from { transform: scale(0.85); opacity: 0; }
+                            to   { transform: scale(1);    opacity: 1; }
+                        }
+                        #welcomePopupImgWrap {
+                            flex: 0 0 170px;
+                            background: var(--bg-secondary, #111);
+                            display: flex;
+                            align-items: flex-end;
+                            justify-content: center;
+                            overflow: hidden;
+                        }
+                        #welcomePopupImg {
+                            width: 100%;
+                            height: auto;
+                            max-height: 340px;
+                            object-fit: contain;
+                            object-position: bottom center;
+                            display: block;
+                        }
+                        #welcomePopupBody {
+                            padding: 1.75rem 1.5rem;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            gap: 0.75rem;
+                            flex: 1;
+                            min-width: 0;
+                        }
+                        #welcomePopupTitle {
+                            font-size: 1.35rem;
+                            font-weight: 800;
+                            color: #ff2a2a;
+                            line-height: 1.2;
+                            margin: 0;
+                        }
+                        #welcomePopupDesc {
+                            font-size: 0.9rem;
+                            color: var(--text-main, #ccc);
+                            line-height: 1.6;
+                            margin: 0;
+                        }
+                        #welcomeCloseBtn {
+                            margin-top: 0.5rem;
+                            align-self: flex-start;
+                            background: #ff2a2a;
+                            color: #fff;
+                            border: none;
+                            border-radius: 8px;
+                            padding: 0.5rem 1.25rem;
+                            font-size: 0.875rem;
+                            font-weight: 700;
+                            cursor: pointer;
+                            transition: opacity 0.2s;
+                        }
+                        #welcomeCloseBtn:hover {
+                            opacity: 0.85;
+                        }
+                    </style>
+
+                    <div id="welcomeOverlay" class="hidden">
+                        <div id="welcomePopup">
+                            <div id="welcomePopupImgWrap">
+                                <img id="welcomePopupImg"
+                                     src="https://raw.githubusercontent.com/darrk5200/images/refs/heads/main/itsukime.png"
+                                     alt="Itsukime">
+                            </div>
+                            <div id="welcomePopupBody">
+                                <h2 id="welcomePopupTitle">Welcome to Itsukime</h2>
+                                <p id="welcomePopupDesc">HD Streaming, Adless Experience, Seasonal Anime, limitless screentime!</p>
+                                <button id="welcomeCloseBtn">Peak!</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        (function () {
+                            if (!localStorage.getItem('firstVisit')) {
+                                localStorage.setItem('firstVisit', 'true');
+                                document.getElementById('welcomeOverlay').classList.remove('hidden');
+                            }
+                            document.getElementById('welcomeCloseBtn').addEventListener('click', function () {
+                                document.getElementById('welcomeOverlay').classList.add('hidden');
+                            });
+                            document.getElementById('welcomeOverlay').addEventListener('click', function (e) {
+                                if (e.target === this) this.classList.add('hidden');
+                            });
                         })();
                     </script>
                 </body>
