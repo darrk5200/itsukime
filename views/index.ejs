@@ -1485,7 +1485,14 @@
                             display: flex;
                             justify-content: space-between;
                             align-items: center;
-                            margin-bottom: 1rem;
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            z-index: 5;
+                            padding: 0.85rem 1rem;
+                            background: linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, transparent 100%);
+                            margin-bottom: 0;
                         }
 
                         .seasonal-title {
@@ -1561,7 +1568,7 @@
 
                         .seasonal-card-image {
                             width: 100%;
-                            height: 180px;
+                            height: 260px;
                             object-fit: cover;
                             display: block;
                         }
@@ -1619,55 +1626,254 @@
                         }
 
                         @media (max-width: 768px) {
+                            .seasonal-section {
+                                margin-left: -1rem;
+                                margin-right: -1rem;
+                                width: calc(100% + 2rem);
+                                margin-bottom: 1.25rem;
+                                border-radius: 0;
+                            }
+
+                            .seasonal-header {
+                                padding: 0.85rem 1rem;
+                            }
+
+                            .seasonal-track-wrapper {
+                                border-radius: 0;
+                            }
+
                             .seasonal-card {
-                                flex: 0 0 calc(100% - 0rem);
+                                flex: 0 0 100%;
+                                border-radius: 0;
+                                border-left: none;
+                                border-right: none;
                             }
 
                             .seasonal-card-image {
-                                height: 120px;
+                                height: 280px;
                             }
 
                             .seasonal-card-name {
-                                font-size: 0.85rem;
+                                font-size: 1rem;
                             }
 
                             .seasonal-card-overlay {
-                                padding: 1.2rem 0.8rem 0.8rem;
+                                padding: 2rem 1rem 1rem;
                             }
 
                             .seasonal-watch-btn {
-                                font-size: 0.7rem;
-                                padding: 0.3rem 0.8rem;
-                            }
-
-                            .seasonal-section {
-                                margin-bottom: 1rem;
+                                font-size: 0.75rem;
+                                padding: 0.35rem 1rem;
                             }
                         }
 
-                        /* Continue Watching Section - smaller cards */
+                        /* Recently Added Row */
+                        .recently-added-section {
+                            margin-bottom: 1.25rem;
+                        }
+
+                        .recently-added-section.hidden {
+                            display: none;
+                        }
+
+                        .section-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            margin-bottom: 0.85rem;
+                        }
+
+                        .section-label {
+                            font-size: 0.85rem;
+                            font-weight: 800;
+                            color: var(--accent-soft);
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                        }
+
+                        .recently-added-row {
+                            display: flex;
+                            gap: 0.75rem;
+                            overflow-x: auto;
+                            scroll-snap-type: x proximity;
+                            -webkit-overflow-scrolling: touch;
+                            cursor: grab;
+                            padding-bottom: 4px;
+                            scrollbar-width: none;
+                        }
+
+                        .recently-added-row::-webkit-scrollbar {
+                            display: none;
+                        }
+
+                        .recently-added-row.is-dragging {
+                            cursor: grabbing;
+                            scroll-behavior: auto;
+                        }
+
+                        .recently-added-row .ra-card {
+                            flex: 0 0 calc(33.333% - 0.5rem);
+                            scroll-snap-align: start;
+                            position: relative;
+                            border-radius: 10px;
+                            overflow: hidden;
+                            cursor: pointer;
+                            border: 1px solid var(--border-color);
+                            transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+                            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+                            background: var(--bg-card);
+                            aspect-ratio: 2/3;
+                        }
+
+                        .recently-added-row .ra-card:hover {
+                            border-color: var(--border-accent);
+                            box-shadow: 0 8px 22px var(--accent-glow);
+                            transform: translateY(-6px);
+                        }
+
+                        .recently-added-row .ra-card img {
+                            position: absolute;
+                            top: 0; left: 0;
+                            width: 100%; height: 100%;
+                            object-fit: cover;
+                            display: block;
+                        }
+
+                        .recently-added-row .ra-card .ra-info {
+                            position: absolute;
+                            bottom: 0; left: 0; right: 0;
+                            padding: 1.5rem 0.6rem 0.6rem;
+                            background: linear-gradient(to top, rgba(0,0,0,0.92), transparent);
+                        }
+
+                        .recently-added-row .ra-card .ra-name {
+                            font-size: 0.72rem;
+                            font-weight: 700;
+                            color: #fff;
+                            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+                            display: -webkit-box;
+                            -webkit-line-clamp: 2;
+                            -webkit-box-orient: vertical;
+                            overflow: hidden;
+                            line-height: 1.3;
+                        }
+
+                        .recently-added-empty {
+                            font-size: 0.8rem;
+                            color: var(--text-dim);
+                            font-style: italic;
+                            padding: 0.5rem 0;
+                        }
+
+                        /* Other Series section label */
+                        .other-series-header {
+                            margin-bottom: 0.85rem;
+                        }
+
+                        /* Continue Watching Section */
                         .continue-watching-section {
-                            margin-bottom: 1rem;
+                            margin-bottom: 1.25rem;
                         }
 
                         .continue-watching-section.hidden {
                             display: none;
                         }
 
-                        /* Smaller cards for continue watching */
                         .continue-watching-grid {
-                            display: grid;
-                            grid-template-columns: repeat(3, 1fr);
-                            gap: 1rem;
+                            display: flex;
+                            flex-direction: row;
+                            gap: 0.75rem;
+                            overflow-x: auto;
+                            scroll-snap-type: x proximity;
+                            -webkit-overflow-scrolling: touch;
+                            scrollbar-width: none;
+                            padding-bottom: 0.25rem;
+                            cursor: grab;
                         }
 
-                        .continue-watching-grid .anime-card {
-                            transform: scale(0.95);
-                            margin: -0.5rem;
+                        .continue-watching-grid::-webkit-scrollbar {
+                            display: none;
                         }
 
-                        .continue-watching-grid .anime-card:hover {
-                            transform: scale(0.85) translateY(-15px);
+                        .continue-watching-grid.is-dragging {
+                            cursor: grabbing;
+                            user-select: none;
+                        }
+
+                        /* Episode thumbnail card for Continue Watching */
+                        .cw-card {
+                            position: relative;
+                            border-radius: 10px;
+                            overflow: hidden;
+                            cursor: pointer;
+                            border: 1px solid var(--border-color);
+                            transition: all 0.28s ease;
+                            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+                            background: #0d0d0d;
+                            aspect-ratio: 16/9;
+                            min-width: 260px;
+                            width: 260px;
+                            flex-shrink: 0;
+                            scroll-snap-align: start;
+                        }
+
+                        .cw-card:hover {
+                            border-color: var(--border-accent);
+                            box-shadow: 0 10px 25px var(--accent-glow);
+                            transform: translateY(-4px);
+                        }
+
+                        .cw-thumbnail {
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            object-fit: cover;
+                            display: block;
+                        }
+
+                        .cw-overlay {
+                            position: absolute;
+                            bottom: 0;
+                            left: 0;
+                            right: 0;
+                            padding: 2rem 0.85rem 0.65rem;
+                            background: linear-gradient(to top, rgba(0,0,0,0.9) 55%, transparent);
+                        }
+
+                        .cw-anime-name {
+                            font-size: 0.9rem;
+                            font-weight: 700;
+                            color: #fff;
+                            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            margin-bottom: 0.2rem;
+                        }
+
+                        .cw-ep-label {
+                            font-size: 0.7rem;
+                            font-weight: 600;
+                            color: var(--accent-soft);
+                        }
+
+                        .cw-progress-bar-container {
+                            position: absolute;
+                            bottom: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 3px;
+                            background: rgba(255, 255, 255, 0.15);
+                            z-index: 3;
+                        }
+
+                        .cw-progress-bar {
+                            height: 100%;
+                            background: #FA4343;
+                            width: 0%;
+                            transition: width 0.3s;
                         }
 
                         .progress-bar-container {
@@ -1697,12 +1903,19 @@
                                 margin-bottom: 2rem;
                             }
                             .continue-watching-grid {
-                                grid-template-columns: repeat(8, 1fr) !important;
                                 gap: 1rem;
+                            }
+                            .cw-card {
+                                min-width: 320px;
+                                width: 320px;
                             }
                             .home-grid {
                                 grid-template-columns: repeat(5, 1fr) !important;
                                 gap: 1rem;
+                            }
+
+                            .recently-added-row .ra-card {
+                                flex: 0 0 calc(20% - 0.6rem);
                             }
 
                             /* History grid maintains more columns on desktop */
@@ -1733,7 +1946,7 @@
                                 font-size: 1.8rem;
                             }
 
-                            .home-grid, .history-grid, .continue-watching-grid {
+                            .home-grid, .history-grid {
                                 grid-template-columns: repeat(3, 1fr) !important;
                                 gap: 0.5rem;
                             }
@@ -1842,9 +2055,6 @@
                                 padding: 0.4rem 0.2rem;
                             }
 
-                            .continue-watching-grid .anime-card:hover {
-                                transform: scale(1) translateY(-10px);
-                            }
                         }
 
                         @media (max-width: 480px) {
@@ -1863,7 +2073,7 @@
 
                         /* Ensure 3 columns on very small devices */
                         @media (max-width: 360px) {
-                            .home-grid, .history-grid, .continue-watching-grid {
+                            .home-grid, .history-grid {
                                 grid-template-columns: repeat(3, 1fr) !important;
                                 gap: 0.2rem;
                             }
@@ -1925,8 +2135,16 @@
                             <div class="continue-watching-grid" id="continueWatchingGrid"></div>
                         </div>
 
-                        <!-- Recently Added Title -->
-                        <div class="recently-added-title" id="recentlyAddedTitle">Recently Added</div>
+                        <!-- Recently Added Horizontal Scroll Section -->
+                        <div class="recently-added-section" id="recentlyAddedSection">
+                            <div class="section-header">
+                                <span class="section-label">Added Today</span>
+                            </div>
+                            <div class="recently-added-row" id="recentlyAddedRow"></div>
+                        </div>
+
+                        <!-- Other Series Title -->
+                        <div class="recently-added-title other-series-header" id="recentlyAddedTitle">More Series</div>
 
                         <!-- Home Grid -->
                         <style>
@@ -2171,13 +2389,14 @@
                         }
 
                         // Add to watch history
-                        function addToHistory(animeName, channelName, episodeNumber, episodeTitle, imageUrl) {
+                        function addToHistory(animeName, channelName, episodeNumber, episodeTitle, imageUrl, episodeThumbnail) {
                             const entry = {
                                 animeName: animeName,
                                 channelName: channelName,
                                 episodeNumber: episodeNumber,
                                 episodeTitle: episodeTitle,
                                 imageUrl: imageUrl,
+                                episodeThumbnail: episodeThumbnail || null,
                                 timestamp: Date.now(),
                                 date: new Date().toLocaleString(),
                                 videoTimestamp: 0,
@@ -2222,6 +2441,76 @@
                         // Periodic progress save
                         setInterval(updateCurrentProgress, 5000);
 
+                        // ── Recently Added Section (horizontal draggable) ─────────────────
+                        function buildRecentlyAddedSection() {
+                            const section = document.getElementById('recentlyAddedSection');
+                            const row = document.getElementById('recentlyAddedRow');
+                            if (!section || !row) return;
+
+                            const now = Date.now();
+                            const cutoff = now - 24 * 60 * 60 * 1000; // 24 hours
+
+                            const recentEntries = Object.entries(animeMetadata)
+                                .filter(([_, meta]) => meta && meta.timestamp && meta.timestamp > cutoff)
+                                .sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+
+                            if (recentEntries.length === 0) {
+                                section.classList.add('hidden');
+                                return;
+                            }
+
+                            section.classList.remove('hidden');
+                            row.innerHTML = '';
+
+                            recentEntries.forEach(([channelName, meta]) => {
+                                const card = document.createElement('div');
+                                card.className = 'ra-card';
+
+                                const genreTags = (meta.genres || []).slice(0, 2)
+                                    .map(g => `<span class="genre-tag">${g}</span>`).join('');
+
+                                card.innerHTML = `
+                                    <img src="${meta.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}"
+                                         alt="${(meta.name || channelName).replace(/"/g, '&quot;')}"
+                                         loading="lazy"
+                                         onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                                    <div class="ra-info">
+                                        <div class="ra-name">${meta.name || channelName}</div>
+                                        <div class="anime-genres" style="margin-top:0.25rem">${genreTags}</div>
+                                    </div>
+                                `;
+
+                                card.addEventListener('click', () => {
+                                    showAnimeDetail(meta, channelName);
+                                });
+
+                                row.appendChild(card);
+                            });
+
+                            // Mouse drag-to-scroll
+                            let isDown = false, startX = 0, scrollLeft = 0, dragged = false;
+                            row.addEventListener('mousedown', (e) => {
+                                isDown = true; dragged = false;
+                                startX = e.pageX - row.offsetLeft;
+                                scrollLeft = row.scrollLeft;
+                                row.classList.add('is-dragging');
+                            });
+                            row.addEventListener('mouseleave', () => { isDown = false; row.classList.remove('is-dragging'); });
+                            row.addEventListener('mouseup', () => { isDown = false; row.classList.remove('is-dragging'); });
+                            row.addEventListener('mousemove', (e) => {
+                                if (!isDown) return;
+                                e.preventDefault();
+                                const x = e.pageX - row.offsetLeft;
+                                const walk = x - startX;
+                                if (Math.abs(walk) > 4) dragged = true;
+                                row.scrollLeft = scrollLeft - walk;
+                            });
+                            // Prevent click after drag
+                            row.querySelectorAll('.ra-card').forEach(card => {
+                                card.addEventListener('click', (e) => { if (dragged) e.stopImmediatePropagation(); }, true);
+                            });
+                        }
+
                         function displayContinueWatching() {
                             const continueWatchingGrid = document.getElementById('continueWatchingGrid');
                             if (!continueWatchingGrid) return;
@@ -2236,21 +2525,24 @@
 
                             continueWatching.forEach(entry => {
                                 const card = document.createElement('div');
-                                card.className = 'anime-card';
+                                card.className = 'cw-card';
 
                                 const progress = entry.duration ? (entry.videoTimestamp / entry.duration) * 100 : 0;
+                                const epNum = entry.episodeNumber % 1 !== 0 ? entry.episodeNumber : `EP ${String(entry.episodeNumber).padStart(2, '0')}`;
+                                const thumbSrc = entry.episodeThumbnail || entry.imageUrl || 'https://via.placeholder.com/640x360?text=No+Image';
 
                                 card.innerHTML = `
-                                    <img src="${entry.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}" 
-                                         alt="${entry.animeName}" 
-                                         class="anime-image"
-                                         loading="lazy">
-                                    <span class="history-episode">EP ${entry.episodeNumber}</span>
-                                    <div class="progress-bar-container">
-                                        <div class="progress-bar" style="width: ${progress}%"></div>
+                                    <img src="${thumbSrc}"
+                                         alt="${entry.animeName}"
+                                         class="cw-thumbnail"
+                                         loading="lazy"
+                                         onerror="this.src='https://via.placeholder.com/640x360?text=No+Image'">
+                                    <div class="cw-overlay">
+                                        <div class="cw-anime-name">${entry.animeName}</div>
+                                        <div class="cw-ep-label">${epNum}${entry.episodeTitle ? ' · ' + entry.episodeTitle : ''}</div>
                                     </div>
-                                    <div class="anime-info">
-                                        <div class="anime-name">${entry.animeName}</div>
+                                    <div class="cw-progress-bar-container">
+                                        <div class="cw-progress-bar" style="width: ${progress}%"></div>
                                     </div>
                                 `;
 
@@ -2259,8 +2551,6 @@
                                     const metadata = animeMetadata[entry.channelName];
                                     if (metadata) {
                                         showAnimeDetail(metadata, entry.channelName, entry.episodeNumber);
-                                        // The loadChannel will be called inside showAnimeDetail
-                                        // We need to seek after the video starts playing
                                         const seekHandler = () => {
                                             if (entry.videoTimestamp > 0) {
                                                 videoPlayer.currentTime = entry.videoTimestamp;
@@ -2273,6 +2563,32 @@
 
                                 continueWatchingGrid.appendChild(card);
                             });
+
+                            // Mouse drag-to-scroll (attach once)
+                            if (!continueWatchingGrid.dataset.dragInit) {
+                                continueWatchingGrid.dataset.dragInit = '1';
+                                let cwDown = false, cwStartX = 0, cwScrollLeft = 0, cwDragged = false;
+                                continueWatchingGrid.addEventListener('mousedown', (e) => {
+                                    cwDown = true; cwDragged = false;
+                                    cwStartX = e.pageX - continueWatchingGrid.offsetLeft;
+                                    cwScrollLeft = continueWatchingGrid.scrollLeft;
+                                    continueWatchingGrid.classList.add('is-dragging');
+                                });
+                                continueWatchingGrid.addEventListener('mouseleave', () => { cwDown = false; continueWatchingGrid.classList.remove('is-dragging'); });
+                                continueWatchingGrid.addEventListener('mouseup', () => { cwDown = false; continueWatchingGrid.classList.remove('is-dragging'); });
+                                continueWatchingGrid.addEventListener('mousemove', (e) => {
+                                    if (!cwDown) return;
+                                    e.preventDefault();
+                                    const x = e.pageX - continueWatchingGrid.offsetLeft;
+                                    const walk = x - cwStartX;
+                                    if (Math.abs(walk) > 4) cwDragged = true;
+                                    continueWatchingGrid.scrollLeft = cwScrollLeft - walk;
+                                });
+                                // Prevent click-through after drag (event delegation)
+                                continueWatchingGrid.addEventListener('click', (e) => {
+                                    if (cwDragged) { e.stopImmediatePropagation(); cwDragged = false; }
+                                }, true);
+                            }
                         }
 
                         // Display watch history
@@ -2411,6 +2727,7 @@
 
                             seasonalSection.classList.remove('hidden');
                             document.getElementById('recentlyAddedTitle').style.display = 'block';
+                            buildRecentlyAddedSection();
 
                             backBtn.classList.add('hidden');
                             homeBtn.classList.add('active');
@@ -2426,6 +2743,7 @@
                             loadMoreContainer.style.display = 'none';
                             continueWatchingSection.classList.add('hidden');
                             seasonalSection.classList.add('hidden');
+                            document.getElementById('recentlyAddedSection').classList.add('hidden');
                             document.getElementById('recentlyAddedTitle').style.display = 'none';
 
                             backBtn.classList.add('hidden');
@@ -2444,6 +2762,7 @@
                             loadMoreContainer.style.display = 'none';
                             continueWatchingSection.classList.add('hidden');
                             seasonalSection.classList.add('hidden');
+                            document.getElementById('recentlyAddedSection').classList.add('hidden');
                             document.getElementById('recentlyAddedTitle').style.display = 'none';
 
                             backBtn.classList.add('hidden');
@@ -2575,6 +2894,7 @@
                             if (continueWatchingSection) {
                                 continueWatchingSection.classList.add('hidden');
                             }
+                            document.getElementById('recentlyAddedSection').classList.add('hidden');
                             document.getElementById('recentlyAddedTitle').style.display = 'none';
                             seasonalSection.classList.add('hidden');
 
@@ -2599,6 +2919,7 @@
                             if (genreBar) genreBar.classList.remove('expanded');
                             document.getElementById('filterBtn')?.classList.remove('active');
                             seasonalSection.classList.add('hidden');
+                            document.getElementById('recentlyAddedSection').classList.add('hidden');
                             document.getElementById('recentlyAddedTitle').style.display = 'none';
                             loadMoreContainer.style.display = 'none';
 
@@ -2890,6 +3211,7 @@
 
                                 homeGrid.classList.add('hidden');
                                 historyGrid.classList.add('hidden');
+                                document.getElementById('recentlyAddedSection').classList.add('hidden');
                                 document.getElementById('recentlyAddedTitle').style.display = 'none';
                                 loadMoreContainer.style.display = 'none';
                                 seasonalSection.classList.add('hidden');
@@ -3049,7 +3371,8 @@
                                     currentChannel,
                                     video.episode || 1,
                                     video.title,
-                                    metadata.imageUrl
+                                    metadata.imageUrl,
+                                    video.thumbnail || null
                                 );
                             }
 
@@ -3131,6 +3454,10 @@
                                 updateCardGenres();
                                 debouncedSeasonalRebuild();
                                 rebuildGenreFilter();
+                                // Rebuild recently added if we're on home view
+                                if (!homeGrid.classList.contains('hidden')) {
+                                    buildRecentlyAddedSection();
+                                }
                             }
                             if (data.synonyms) {
                                 synonymMap = data.synonyms;
@@ -3320,6 +3647,7 @@
 
                         // Initialize
                         loadWatchHistory();
+                        buildRecentlyAddedSection();
 
                         // ── Genre Filter Bar ─────────────────────────────────────────────
                         let activeGenre = 'All';
@@ -3408,6 +3736,7 @@
                             const seasonalSection  = document.getElementById('seasonalSection');
                             const continueSection  = document.getElementById('continueWatchingSection');
                             const recentTitle      = document.getElementById('recentlyAddedTitle');
+                            const recentSection    = document.getElementById('recentlyAddedSection');
                             const homeGridEl       = document.getElementById('homeGrid');
                             const loadMoreEl       = document.getElementById('loadMoreContainer');
                             const containerEl      = seasonalSection && seasonalSection.parentNode;
@@ -3416,6 +3745,7 @@
 
                             function moveRecentAboveSeasonal() {
                                 if (!containerEl || !seasonalSection) return;
+                                if (recentSection) containerEl.insertBefore(recentSection, seasonalSection);
                                 containerEl.insertBefore(recentTitle, seasonalSection);
                                 containerEl.insertBefore(homeGridEl, seasonalSection);
                                 containerEl.insertBefore(loadMoreEl, seasonalSection);
@@ -3425,6 +3755,7 @@
                                 if (!containerEl) return;
                                 // Insert after continueWatchingSection (or after seasonalSection if not present)
                                 const anchor = continueSection ? continueSection.nextSibling : seasonalSection.nextSibling;
+                                if (recentSection) containerEl.insertBefore(recentSection, anchor);
                                 containerEl.insertBefore(recentTitle, anchor);
                                 containerEl.insertBefore(homeGridEl, anchor);
                                 containerEl.insertBefore(loadMoreEl, anchor);
@@ -3701,9 +4032,9 @@
                                 } catch(e) {}
                             }
                             function enterFs() {
-                                if (vid.requestFullscreen)            vid.requestFullscreen().then(() => { lockLandscape(); showControls(); }).catch(() => {});
-                                else if (vid.webkitRequestFullscreen) { vid.webkitRequestFullscreen(); lockLandscape(); showControls(); }
-                                else if (vid.webkitEnterFullscreen)   vid.webkitEnterFullscreen();
+                                if (container.requestFullscreen)            container.requestFullscreen().then(() => { lockLandscape(); showControls(); }).catch(() => {});
+                                else if (container.webkitRequestFullscreen) { container.webkitRequestFullscreen(); lockLandscape(); showControls(); }
+                                else if (vid.webkitEnterFullscreen)         vid.webkitEnterFullscreen();
                             }
                             function exitFs() {
                                 if (document.exitFullscreen)            document.exitFullscreen();
