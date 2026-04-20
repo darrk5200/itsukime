@@ -13,7 +13,7 @@
                 // ============================================
 
                 // Multiple bot configuration for parallel caching
-                const CACHE_BOTS = {
+               const CACHE_BOTS = {
                     bot3: {
                         token: process.env.BOT3_TOKEN,
                         cacheCategoryIds: process.env.BOT3_CATEGORIES.split(","),
