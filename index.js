@@ -13,7 +13,7 @@
                 // ============================================
 
                 // Multiple bot configuration for parallel caching
-               const CACHE_BOTS = {
+                const CACHE_BOTS = {
                     bot3: {
                         token: process.env.BOT3_TOKEN,
                         cacheCategoryIds: process.env.BOT3_CATEGORIES.split(","),
@@ -632,7 +632,7 @@
                         console.log(`🎭 Backfilled TMDB genres for ${genresEnriched} anime entries`);
                         cachedSocketMeta = null;
                         io.emit("metadata-update", {
-                            metadata: Object.fromEntries(animeMetadata),
+                            metadata: buildEnrichedMetadata(animeMetadata),
                             synonyms: Object.fromEntries(synonymMap)
                         });
                     }
@@ -647,13 +647,39 @@
                     }
                 }
 
+                function computeRecentlyAdded(msBack) {
+                    const now = Date.now();
+                    const cutoff = now - msBack;
+                    const seen = new Set();
+                    const results = [];
+                    for (const [channelKey, ts] of latestVideoTimestampCache.entries()) {
+                        if (ts <= cutoff) continue;
+                        const meta = findMetadataForChannel(channelKey);
+                        if (!meta) continue;
+                        const nameKey = (meta.name || '').toLowerCase().trim();
+                        if (seen.has(nameKey)) continue;
+                        seen.add(nameKey);
+                        results.push({
+                            channelName: channelKey,
+                            name: meta.name,
+                            imageUrl: meta.imageUrl,
+                            genres: meta.genres || [],
+                            latestVideoTimestamp: ts
+                        });
+                    }
+                    results.sort((a, b) => b.latestVideoTimestamp - a.latestVideoTimestamp);
+                    return results;
+                }
+
                 function debouncedLibraryUpdate() {
                     if (libraryUpdateTimer) clearTimeout(libraryUpdateTimer);
                     libraryUpdateTimer = setTimeout(() => {
                         rebuildTimestampCache();
                         io.emit("library-update", {
                             channels: Array.from(videoLibrary.keys()),
-                            latestAnime: latestAnimeEntries
+                            latestAnime: latestAnimeEntries,
+                            enrichedMetadata: buildEnrichedMetadata(animeMetadata),
+                            recentlyAdded: computeRecentlyAdded(24 * 60 * 60 * 1000)
                         });
                         libraryUpdateTimer = null;
                     }, 2000);
@@ -868,6 +894,28 @@
                     expandedTerms.add(titleToChannelName(baseTitle));
 
                     return Array.from(expandedTerms);
+                }
+
+                // ============================================
+                // METADATA ENRICHMENT HELPERS
+                // ============================================
+
+                function getGlobalLatestVideoTs(channelKey) {
+                    const cached = latestVideoTimestampCache.get(channelKey);
+                    if (cached) return cached;
+                    const alphaKey = channelKey.replace(/[^a-z0-9]/g, '');
+                    for (const [libKey, ts] of latestVideoTimestampCache.entries()) {
+                        if (libKey.replace(/[^a-z0-9]/g, '') === alphaKey) return ts;
+                    }
+                    return 0;
+                }
+
+                function buildEnrichedMetadata(metaMap) {
+                    const out = {};
+                    for (const [key, value] of metaMap.entries()) {
+                        out[key] = { ...value, latestVideoTimestamp: getGlobalLatestVideoTs(key) || value.timestamp || 0 };
+                    }
+                    return out;
                 }
 
                 // ============================================
@@ -1327,7 +1375,7 @@
 
                             cachedSocketMeta = null;
                             io.emit("metadata-update", {
-                                metadata: Object.fromEntries(animeMetadata),
+                                metadata: buildEnrichedMetadata(animeMetadata),
                                 synonyms: Object.fromEntries(synonymMap)
                             });
 
@@ -1532,7 +1580,7 @@
                         // Notify all already-connected clients (e.g. page loaded before bots finished)
                         cachedSocketMeta = null;
                         io.emit("metadata-update", {
-                            metadata: Object.fromEntries(animeMetadata),
+                            metadata: buildEnrichedMetadata(animeMetadata),
                             synonyms: Object.fromEntries(synonymMap)
                         });
 
@@ -1677,7 +1725,9 @@
                             const bTime = getLatestVideoTimestamp(b[0]) || b[1].timestamp || 0;
                             return bTime - aTime;
                         })
-                        .forEach(([key, value]) => { resolvedMetadata[key] = value; });
+                        .forEach(([key, value]) => {
+                            resolvedMetadata[key] = { ...value, latestVideoTimestamp: getGlobalLatestVideoTs(key) || value.timestamp || 0 };
+                        });
 
                     res.render("index", {
                         channels: enhancedChannels,
@@ -1906,7 +1956,8 @@
                     const channelKeys = Array.from(videoLibrary.keys());
                     socket.emit("library-update", {
                         channels: channelKeys,
-                        latestAnime: latestAnimeEntries
+                        latestAnime: latestAnimeEntries,
+                        recentlyAdded: computeRecentlyAdded(24 * 60 * 60 * 1000)
                     });
 
                     const now = Date.now();
