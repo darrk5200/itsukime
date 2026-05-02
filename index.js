@@ -71,6 +71,7 @@
                 app.use(cors());
                 app.use(express.json());
                 app.use(express.static(path.join(__dirname, "public"), { maxAge: '1h' }));
+                app.use('/icons', express.static(path.join(__dirname, "icons"), { maxAge: '1h' }));
                 app.set("view engine", "ejs");
                 app.set("views", path.join(__dirname, "views"));
 
@@ -84,7 +85,6 @@
                 let animeMetadata = new Map();
                 let channelNameToMetadata = new Map();
                 let synonymMap = new Map();
-                let channelList = [];
                 let botRestartTimers = new Map();
                 let latestAnimeEntries = []; // Store the latest anime entries
 
@@ -242,37 +242,6 @@
                     }
 
                     return normalized;
-                }
-
-                // FIXED: Improved function to calculate cumulative episodes across all seasons
-                async function calculateCumulativeEpisodes(showId, targetSeasonNum) {
-                    try {
-                        const showRes = await fetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
-                        const showData = await showRes.json();
-
-                        let cumulativeEps = 0;
-
-                        if (showData.seasons) {
-                            // Sort seasons by season number
-                            const sortedSeasons = showData.seasons
-                                .filter(s => s.season_number > 0)
-                                .sort((a, b) => a.season_number - b.season_number);
-
-                            // Add episodes from all seasons before the target season
-                            for (const season of sortedSeasons) {
-                                if (season.season_number < targetSeasonNum) {
-                                    cumulativeEps += season.episode_count || 0;
-                                } else {
-                                    break;
-                                }
-                            }
-                        }
-
-                        return cumulativeEps;
-                    } catch (error) {
-                        console.error(`Error calculating cumulative episodes: ${error.message}`);
-                        return 0;
-                    }
                 }
 
                 // Pick the TMDB result whose name most closely matches the search query
@@ -632,8 +601,7 @@
                         console.log(`🎭 Backfilled TMDB genres for ${genresEnriched} anime entries`);
                         cachedSocketMeta = null;
                         io.emit("metadata-update", {
-                            metadata: buildEnrichedMetadata(animeMetadata),
-                            synonyms: Object.fromEntries(synonymMap)
+                            metadata: buildClientMetadata(animeMetadata)
                         });
                     }
                 }
@@ -676,9 +644,7 @@
                     libraryUpdateTimer = setTimeout(() => {
                         rebuildTimestampCache();
                         io.emit("library-update", {
-                            channels: Array.from(videoLibrary.keys()),
-                            latestAnime: latestAnimeEntries,
-                            enrichedMetadata: buildEnrichedMetadata(animeMetadata),
+                            channels: getCanonicalChannelNames(),
                             recentlyAdded: computeRecentlyAdded(24 * 60 * 60 * 1000)
                         });
                         libraryUpdateTimer = null;
@@ -727,16 +693,6 @@
                         .replace(/\s+/g, ' ') // Collapse multiple spaces
                         .trim()
                         .replace(/\s+/g, '-'); // Convert spaces to hyphens
-                }
-
-                function getSeasonSuffix(num) {
-                    if (num >= 11 && num <= 13) return 'th';
-                    switch (num % 10) {
-                        case 1: return 'st';
-                        case 2: return 'nd';
-                        case 3: return 'rd';
-                        default: return 'th';
-                    }
                 }
 
                 function formatDisplayName(channelName, metadata) {
@@ -916,6 +872,34 @@
                         out[key] = { ...value, latestVideoTimestamp: getGlobalLatestVideoTs(key) || value.timestamp || 0 };
                     }
                     return out;
+                }
+
+                // Strip server-internal fields before sending metadata to clients
+                function stripMetaForClient(metaObj) {
+                    const { messageId, sourceBot, normalizedName, searchTerms, synonyms, ...clientMeta } = metaObj;
+                    return clientMeta;
+                }
+
+                function buildClientMetadata(metaMap) {
+                    const out = {};
+                    for (const [key, value] of metaMap.entries()) {
+                        out[key] = stripMetaForClient({ ...value, latestVideoTimestamp: getGlobalLatestVideoTs(key) || value.timestamp || 0 });
+                    }
+                    return out;
+                }
+
+                // Return deduplicated canonical channel names (avoids sending 4-5 keys per channel)
+                function getCanonicalChannelNames() {
+                    const seen = new Set();
+                    const names = [];
+                    for (const key of videoLibrary.keys()) {
+                        const canonical = key.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                        if (!seen.has(canonical)) {
+                            seen.add(canonical);
+                            names.push(key);
+                        }
+                    }
+                    return names;
                 }
 
                 // ============================================
@@ -1375,8 +1359,7 @@
 
                             cachedSocketMeta = null;
                             io.emit("metadata-update", {
-                                metadata: buildEnrichedMetadata(animeMetadata),
-                                synonyms: Object.fromEntries(synonymMap)
+                                metadata: buildClientMetadata(animeMetadata)
                             });
 
                             debouncedLibraryUpdate();
@@ -1580,8 +1563,7 @@
                         // Notify all already-connected clients (e.g. page loaded before bots finished)
                         cachedSocketMeta = null;
                         io.emit("metadata-update", {
-                            metadata: buildEnrichedMetadata(animeMetadata),
-                            synonyms: Object.fromEntries(synonymMap)
+                            metadata: buildClientMetadata(animeMetadata)
                         });
 
                         const videoStart = Date.now();
@@ -1730,11 +1712,11 @@
                         });
 
                     res.render("index", {
-                        channels: enhancedChannels,
-                        channelNames: Array.from(videoLibrary.keys()),
-                        animeMetadata: resolvedMetadata,
-                        synonyms: Object.fromEntries(synonymMap),
-                        latestAnime: latestAnimeEntries,
+                        channelNames: getCanonicalChannelNames(),
+                        animeMetadata: Object.fromEntries(
+                            Object.entries(resolvedMetadata).map(([k, v]) => [k, stripMetaForClient(v)])
+                        ),
+                        recentlyAdded: computeRecentlyAdded(24 * 60 * 60 * 1000),
                         formatDisplayName: formatDisplayName
                     });
                 });
@@ -1946,17 +1928,14 @@
                 // SOCKET.IO
                 // ============================================
 
-                let lastLibraryHash = '';
                 let cachedSocketMeta = null;
                 let cachedSocketMetaTime = 0;
 
                 io.on("connection", (socket) => {
                     console.log("👤 Client connected");
 
-                    const channelKeys = Array.from(videoLibrary.keys());
                     socket.emit("library-update", {
-                        channels: channelKeys,
-                        latestAnime: latestAnimeEntries,
+                        channels: getCanonicalChannelNames(),
                         recentlyAdded: computeRecentlyAdded(24 * 60 * 60 * 1000)
                     });
 
@@ -1971,8 +1950,7 @@
                             }
                         }
                         cachedSocketMeta = {
-                            metadata: resolvedMeta,
-                            synonyms: Object.fromEntries(synonymMap)
+                            metadata: buildClientMetadata(new Map(Object.entries(resolvedMeta)))
                         };
                         cachedSocketMetaTime = now;
                     }
