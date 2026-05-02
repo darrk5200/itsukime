@@ -1215,6 +1215,14 @@
 
                         .nav-btn i {
                             font-size: 1.1rem;
+                            filter: grayscale(1) brightness(0.7);
+                            transition: filter 0.2s;
+                        }
+                        .nav-btn:hover i {
+                            filter: grayscale(0.4) brightness(0.9);
+                        }
+                        .nav-btn.active i {
+                            filter: grayscale(0) brightness(1);
                         }
 
                         .nav-btn span {
@@ -1313,6 +1321,289 @@
                             height: 18px;
                             fill: currentColor;
                         }
+
+                        /* Multi-Profile Switcher */
+                        .profile-switcher {
+                            display: flex;
+                            gap: 0.75rem;
+                            justify-content: center;
+                            margin-bottom: 2rem;
+                            flex-wrap: wrap;
+                        }
+                        .profile-slot {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            gap: 0.35rem;
+                            cursor: pointer;
+                            padding: 0.55rem 0.7rem;
+                            border-radius: 12px;
+                            border: 2px solid transparent;
+                            background: var(--bg-secondary);
+                            transition: all 0.2s ease;
+                            min-width: 68px;
+                        }
+                        .profile-slot:hover { border-color: var(--accent); background: var(--bg-card); }
+                        .profile-slot.active {
+                            border-color: var(--accent);
+                            background: var(--bg-card);
+                            box-shadow: 0 0 12px var(--accent-glow);
+                        }
+                        .ps-avatar {
+                            width: 44px; height: 44px;
+                            border-radius: 50%;
+                            overflow: hidden;
+                            background: var(--bg-tertiary, #1a1a2e);
+                            display: flex; align-items: center; justify-content: center;
+                            font-size: 1.4rem;
+                            border: 2px solid var(--border-accent);
+                            flex-shrink: 0;
+                        }
+                        .ps-avatar img { width: 100%; height: 100%; object-fit: cover; }
+                        .ps-name {
+                            font-size: 0.65rem; font-weight: 700;
+                            color: var(--text-muted);
+                            max-width: 68px; overflow: hidden;
+                            text-overflow: ellipsis; white-space: nowrap; text-align: center;
+                        }
+                        .profile-slot.active .ps-name { color: var(--accent-soft); }
+
+                        /* Large editable avatar */
+                        .profile-avatar-wrap {
+                            position: relative; display: inline-block;
+                            cursor: pointer; margin-bottom: 1rem;
+                        }
+                        .profile-avatar-large {
+                            width: 82px; height: 82px; border-radius: 50%;
+                            overflow: hidden; background: var(--bg-secondary);
+                            border: 3px solid var(--accent);
+                            box-shadow: 0 0 20px var(--accent-glow);
+                            display: flex; align-items: center; justify-content: center;
+                            font-size: 2.6rem; margin: 0 auto;
+                        }
+                        .profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+                        .profile-avatar-edit-hint {
+                            position: absolute; bottom: 2px; right: 2px;
+                            background: var(--accent); color: #fff;
+                            border-radius: 50%; width: 22px; height: 22px;
+                            display: flex; align-items: center; justify-content: center;
+                            font-size: 0.6rem; font-weight: 900;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+                            pointer-events: none;
+                        }
+
+                        /* Editable name */
+                        .profile-name-edit { display: flex; align-items: center; justify-content: center; gap: 0.35rem; margin-bottom: 0.25rem; }
+                        .profile-name-input {
+                            background: transparent; border: none;
+                            border-bottom: 1.5px solid transparent;
+                            color: var(--accent-soft); font-size: 1.3rem; font-weight: 800;
+                            text-align: center; outline: none; font-family: inherit;
+                            max-width: 200px; transition: border-color 0.2s; padding: 0 0.1rem;
+                        }
+                        .profile-name-input:focus { border-bottom-color: var(--accent); }
+
+                        /* Icon picker */
+                        .icon-picker-backdrop {
+                            position: fixed; inset: 0;
+                            background: rgba(0,0,0,0.6); z-index: 9100;
+                            display: flex; align-items: center; justify-content: center;
+                            animation: fadeIn 0.15s ease;
+                        }
+                        .icon-picker-card {
+                            background: var(--bg-card);
+                            border: 1px solid var(--border-accent);
+                            border-radius: 16px; padding: 1.5rem 1.75rem;
+                            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 30px var(--accent-glow);
+                            animation: slideUp 0.2s ease;
+                        }
+                        .icon-picker-title {
+                            font-size: 0.7rem; font-weight: 800;
+                            letter-spacing: 1.5px; text-transform: uppercase;
+                            color: var(--text-muted); margin-bottom: 1rem; text-align: center;
+                        }
+                        .icon-picker-grid {
+                            display: grid; grid-template-columns: repeat(4, 52px);
+                            gap: 0.7rem; margin-bottom: 1rem; justify-content: center;
+                        }
+                        .ip-option {
+                            width: 52px; height: 52px; border-radius: 50%;
+                            border: 2px solid var(--border-accent);
+                            background: var(--bg-secondary);
+                            display: flex; align-items: center; justify-content: center;
+                            cursor: pointer; overflow: hidden; font-size: 1.5rem;
+                            transition: all 0.18s ease;
+                        }
+                        .ip-option:hover, .ip-option.ip-selected {
+                            border-color: var(--accent);
+                            box-shadow: 0 0 10px var(--accent-glow);
+                            transform: scale(1.08);
+                        }
+                        .ip-option img { width: 100%; height: 100%; object-fit: cover; }
+                        .icon-picker-close {
+                            font-size: 0.72rem; color: var(--text-dim); text-align: center;
+                            cursor: pointer; padding-top: 0.6rem;
+                            border-top: 1px solid var(--border-color); margin-top: 0.1rem;
+                        }
+                        .icon-picker-close:hover { color: var(--accent-soft); }
+
+                        /* Profile Picker Overlay (Netflix-style) */
+                        .profile-picker-overlay {
+                            position: fixed; inset: 0;
+                            background: #0d0d0f;
+                            z-index: 10000;
+                            display: flex; flex-direction: column;
+                            align-items: center; justify-content: center;
+                            animation: fadeIn 0.25s ease;
+                        }
+                        .profile-picker-title {
+                            font-size: 1.9rem; font-weight: 800;
+                            color: #fff; margin-bottom: 2.5rem;
+                            letter-spacing: 0.3px; text-align: center;
+                        }
+                        .profile-picker-grid {
+                            display: flex; gap: 1.25rem;
+                            flex-wrap: wrap; justify-content: center;
+                            max-width: 560px; padding: 0 1rem;
+                        }
+                        .profile-picker-card {
+                            display: flex; flex-direction: column;
+                            align-items: center; gap: 0.6rem;
+                            cursor: pointer; padding: 0.75rem 0.9rem;
+                            border-radius: 10px; border: 2px solid transparent;
+                            transition: all 0.2s ease; position: relative;
+                        }
+                        .profile-picker-card:hover { border-color: var(--accent); transform: scale(1.06); }
+                        .profile-picker-avatar {
+                            width: 80px; height: 80px; border-radius: 8px;
+                            overflow: hidden; background: #1e1e28;
+                            display: flex; align-items: center; justify-content: center;
+                            font-size: 2.3rem; border: 2px solid #333;
+                        }
+                        .profile-picker-avatar img { width: 100%; height: 100%; object-fit: cover; }
+                        .profile-picker-card:hover .profile-picker-avatar { border-color: var(--accent); }
+                        .profile-picker-name {
+                            font-size: 0.82rem; font-weight: 600; color: #aaa;
+                            max-width: 90px; overflow: hidden;
+                            text-overflow: ellipsis; white-space: nowrap; text-align: center;
+                        }
+                        .profile-picker-card:hover .profile-picker-name { color: #fff; }
+                        .profile-picker-add-card .profile-picker-avatar {
+                            font-size: 2.2rem; color: #666;
+                            border: 2px dashed #444; background: transparent;
+                        }
+                        .profile-picker-add-card:hover .profile-picker-avatar {
+                            border-color: var(--accent); color: var(--accent-soft);
+                        }
+                        .profile-picker-delete {
+                            position: absolute; top: 4px; right: 4px;
+                            width: 20px; height: 20px;
+                            background: rgba(0,0,0,0.75); color: #888;
+                            border: 1px solid #555; border-radius: 50%;
+                            font-size: 0.6rem; display: flex;
+                            align-items: center; justify-content: center;
+                            cursor: pointer; opacity: 0; transition: all 0.15s;
+                        }
+                        .profile-picker-card:hover .profile-picker-delete { opacity: 1; }
+                        .profile-picker-delete:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
+
+                        /* Profile slot delete btn */
+                        .ps-delete-btn {
+                            position: absolute; top: -5px; right: -5px;
+                            width: 18px; height: 18px;
+                            background: rgba(0,0,0,0.85); color: #888;
+                            border: 1px solid #555; border-radius: 50%;
+                            font-size: 0.55rem; display: flex;
+                            align-items: center; justify-content: center;
+                            cursor: pointer; opacity: 0; transition: all 0.15s; padding: 0;
+                        }
+                        .profile-slot:hover .ps-delete-btn { opacity: 1; }
+                        .ps-delete-btn:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
+
+                        /* Add Profile Modal */
+                        .add-profile-backdrop {
+                            position: fixed; inset: 0;
+                            background: rgba(0,0,0,0.72); z-index: 10100;
+                            display: flex; align-items: center; justify-content: center;
+                            animation: fadeIn 0.15s ease;
+                        }
+                        .add-profile-card {
+                            background: var(--bg-card);
+                            border: 1px solid var(--border-accent);
+                            border-radius: 16px; padding: 1.75rem 2rem;
+                            box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px var(--accent-glow);
+                            animation: slideUp 0.2s ease; min-width: 280px;
+                        }
+                        .add-profile-title {
+                            font-size: 0.72rem; font-weight: 800;
+                            letter-spacing: 1.5px; text-transform: uppercase;
+                            color: var(--text-muted); margin-bottom: 1.25rem; text-align: center;
+                        }
+                        .add-profile-name-input {
+                            width: 100%; box-sizing: border-box;
+                            background: var(--bg-secondary);
+                            border: 1.5px solid var(--border-accent);
+                            border-radius: 8px; color: var(--text-main, #fff);
+                            font-size: 0.9rem; font-family: inherit;
+                            padding: 0.5rem 0.75rem; margin-top: 1.1rem;
+                            outline: none; transition: border-color 0.2s;
+                        }
+                        .add-profile-name-input:focus { border-color: var(--accent); }
+                        .add-profile-btns { display: flex; gap: 0.6rem; margin-top: 1rem; }
+                        .add-profile-btn-create {
+                            flex: 1; padding: 0.55rem;
+                            background: var(--accent); color: #fff;
+                            border: none; border-radius: 8px;
+                            font-size: 0.82rem; font-weight: 700;
+                            cursor: pointer; transition: opacity 0.2s;
+                        }
+                        .add-profile-btn-create:hover { opacity: 0.85; }
+                        .add-profile-btn-cancel {
+                            flex: 1; padding: 0.55rem;
+                            background: var(--bg-secondary); color: var(--text-dim);
+                            border: 1px solid var(--border-color); border-radius: 8px;
+                            font-size: 0.82rem; font-weight: 700;
+                            cursor: pointer; transition: all 0.2s;
+                        }
+                        .add-profile-btn-cancel:hover { border-color: var(--accent); color: var(--accent-soft); }
+
+                        /* Delete Profile Confirm Dialog */
+                        .del-confirm-card {
+                            background: var(--bg-card);
+                            border: 1px solid #c0392b55;
+                            border-radius: 16px; padding: 1.75rem 2rem;
+                            box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(192,57,43,0.2);
+                            animation: slideUp 0.2s ease; min-width: 280px; max-width: 320px;
+                            text-align: center;
+                        }
+                        .del-confirm-icon {
+                            font-size: 2rem; margin-bottom: 0.6rem;
+                        }
+                        .del-confirm-title {
+                            font-size: 1rem; font-weight: 800; color: #fff;
+                            margin-bottom: 0.4rem;
+                        }
+                        .del-confirm-desc {
+                            font-size: 0.78rem; color: var(--text-dim);
+                            line-height: 1.5; margin-bottom: 1.25rem;
+                        }
+                        .del-confirm-btns { display: flex; gap: 0.6rem; }
+                        .del-confirm-btn-cancel {
+                            flex: 1; padding: 0.55rem;
+                            background: var(--bg-secondary); color: var(--text-dim);
+                            border: 1px solid var(--border-color); border-radius: 8px;
+                            font-size: 0.82rem; font-weight: 700;
+                            cursor: pointer; transition: all 0.2s;
+                        }
+                        .del-confirm-btn-cancel:hover { border-color: var(--accent); color: var(--accent-soft); }
+                        .del-confirm-btn-delete {
+                            flex: 1; padding: 0.55rem;
+                            background: #c0392b; color: #fff;
+                            border: none; border-radius: 8px;
+                            font-size: 0.82rem; font-weight: 700;
+                            cursor: pointer; transition: opacity 0.2s;
+                        }
+                        .del-confirm-btn-delete:hover { opacity: 0.85; }
 
                         .footer-text {
                             font-size: 0.7rem;
@@ -1759,11 +2050,9 @@
 
                         .seasonal-card-overlay {
                             position: absolute;
-                            bottom: 0;
-                            left: 0;
-                            right: 0;
+                            inset: 0;
                             padding: 2rem 1rem 1rem;
-                            background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.4), transparent);
+                            background: linear-gradient(180deg, rgba(0,0,0,0.28) 0%, transparent 35%, transparent 50%, rgba(0,0,0,0.92) 100%);
                             display: flex;
                             justify-content: space-between;
                             align-items: flex-end;
@@ -2285,6 +2574,7 @@
                     </style>
                 </head>
                 <body>
+                    <div id="pageBlocker" style="position:fixed;inset:0;background:#0d0d0f;z-index:9997;pointer-events:none;"></div>
                     <div class="container">
                         <div class="header">
                             <h1>Itsukime</h1>
@@ -2355,9 +2645,12 @@
                         </style>
                         <div class="home-grid" id="homeGrid">
                             <% if (animeMetadata && Object.keys(animeMetadata).length > 0) { %>
-                                <% Object.entries(animeMetadata).forEach(([channelName, metadata], index) => { %>
-                                    <div class="anime-card <%= index >= 80 ? 'hidden-anime' : '' %>" data-channel="<%= channelName %>" data-index="<%= index %>" data-genres="<%= (metadata.genres || []).join(',') %>">
-                                        <img src="<%= metadata.imageUrl %>" alt="<%= metadata.name %>" class="anime-image" loading="<%= index < 20 ? 'eager' : 'lazy' %>" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                                <% const recentlyAddedChannels = new Set((recentlyAdded || []).map(r => r.channelName)); %>
+                                <% let gridIndex = 0; %>
+                                <% Object.entries(animeMetadata).forEach(([channelName, metadata]) => { %>
+                                    <% if (!recentlyAddedChannels.has(channelName)) { %>
+                                    <div class="anime-card <%= gridIndex >= 80 ? 'hidden-anime' : '' %>" data-channel="<%= channelName %>" data-index="<%= gridIndex %>" data-genres="<%= (metadata.genres || []).join(',') %>">
+                                        <img src="<%= metadata.imageUrl %>" alt="<%= metadata.name %>" class="anime-image" loading="<%= gridIndex < 20 ? 'eager' : 'lazy' %>" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
                                         <div class="anime-info">
                                             <div class="anime-name"><%= metadata.name %></div>
                                             <div class="anime-genres">
@@ -2367,6 +2660,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <% gridIndex++; } %>
                                 <% }); %>
                             <% } %>
                         </div>
@@ -2490,6 +2784,10 @@
                             <i>📜</i>
                             <span>History</span>
                         </button>
+                        <button class="nav-btn" id="bookmarksNavBtn">
+                            <i>🔖</i>
+                            <span>Bookmarks</span>
+                        </button>
                         <button class="nav-btn" id="profileBtn">
                             <i>👤</i>
                             <span>Profile</span>
@@ -2529,7 +2827,7 @@
                         const socket = io();
                         let channelNames = <%- JSON.stringify(channelNames || []) %>;
                         let animeMetadata = <%- JSON.stringify(animeMetadata || {}) %>;
-                        let synonymMap = <%- JSON.stringify(synonyms || {}) %>;
+                        let serverRecentlyAdded = <%- JSON.stringify(recentlyAdded || []) %>;
                         let currentVideos = [];
                         let currentChannel = null;
                         let currentTmdbShowInfo = null;
@@ -2537,6 +2835,292 @@
                         let watchHistory = [];
                         let continueWatching = [];
                         let bookmarks = [];
+
+                        // ── Multi-Profile System ──────────────────────────────────────────
+                        const PROFILE_COUNT_MAX = 4;
+                        const ICON_OPTIONS = [
+                            { icon: 'img:miku.png',       label: 'Miku' },
+                            { icon: 'img:zenitsu.png',    label: 'Zenitsu' },
+                            { icon: 'img:ayanokoji.png',  label: 'Ayanokoji' },
+                            { icon: 'img:horikita.png',   label: 'Horikita' },
+                            { icon: 'img:zack.png',       label: 'Zack' },
+                            { icon: 'img:penguins.png',   label: 'Penguins' },
+                            { icon: 'img:madara.png',     label: 'Madara' },
+                            { icon: 'img:chitanda.jpg',   label: 'Chitanda' },
+                            { icon: 'img:rin.jpg',        label: 'Rin' },
+                            { icon: 'img:saiki.jpg',      label: 'Saiki' },
+                            { icon: 'img:hachiman.webp',  label: 'Hachiman' },
+                            { icon: 'img:nino.jpg',       label: 'Nino' }
+                        ];
+
+                        function getProfilesMeta() {
+                            const saved = localStorage.getItem('itsukime_profiles');
+                            if (saved) return JSON.parse(saved);
+                            return { active: null, profiles: [] };
+                        }
+                        function saveProfilesMeta(meta) {
+                            localStorage.setItem('itsukime_profiles', JSON.stringify(meta));
+                        }
+                        function getActiveProfileIndex() { return getProfilesMeta().active; }
+                        function getPKey(suffix) {
+                            return 'itsukime_p' + getActiveProfileIndex() + '_' + suffix;
+                        }
+                        function iconFileName(icon) {
+                            const name = icon.slice(4);
+                            return name.includes('.') ? name : name + '.png';
+                        }
+                        function iconInnerHTML(icon, fontSize) {
+                            if (!icon) icon = 'img:miku.png';
+                            if (icon.startsWith('img:')) return '<img src="/icons/' + encodeURIComponent(iconFileName(icon)) + '">';
+                            return '<span style="font-size:' + fontSize + '">' + icon.slice(6) + '</span>';
+                        }
+
+                        // Migrate old data into a single profile 0 on first ever load
+                        (function migrateOldData() {
+                            if (localStorage.getItem('itsukime_profiles')) {
+                                // Patch: ensure existing installs always have at least 1 profile
+                                const m = getProfilesMeta();
+                                if (!m.profiles || m.profiles.length === 0) {
+                                    m.profiles = [{ name: 'Profile 1', icon: 'img:miku' }];
+                                    saveProfilesMeta(m);
+                                }
+                                return;
+                            }
+                            const oldKeys = ['itsukime_history','itsukime_continue_watching','itsukime_bookmarks','itsukime_bookmark_sort'];
+                            const p0Keys  = ['itsukime_p0_history','itsukime_p0_continue_watching','itsukime_p0_bookmarks','itsukime_p0_bookmark_sort'];
+                            oldKeys.forEach(function(k, i) {
+                                const v = localStorage.getItem(k) || localStorage.getItem(p0Keys[i]);
+                                if (v) { localStorage.setItem(p0Keys[i], v); localStorage.removeItem(k); }
+                            });
+                            saveProfilesMeta({ active: null, profiles: [{ name: 'Profile 1', icon: 'img:miku' }] });
+                        })();
+
+                        // Activate a profile: load its data without navigating
+                        function activateProfile(idx) {
+                            const meta = getProfilesMeta();
+                            meta.active = idx;
+                            saveProfilesMeta(meta);
+                            watchHistory = []; continueWatching = []; bookmarks = [];
+                            loadWatchHistory();
+                            displayContinueWatching();
+                        }
+
+                        // Switch profile AND go to the Profile tab
+                        function switchProfile(idx) {
+                            activateProfile(idx);
+                            showProfile();
+                        }
+                        window.switchProfile = switchProfile;
+
+                        // Delete a profile by index
+                        function _executeDeleteProfile(idx) {
+                            const meta = getProfilesMeta();
+                            const total = meta.profiles.length;
+                            const dataKeys = ['history', 'continue_watching', 'bookmarks', 'bookmark_sort'];
+
+                            // Clear the deleted profile's data
+                            dataKeys.forEach(function(k) {
+                                localStorage.removeItem('itsukime_p' + idx + '_' + k);
+                            });
+
+                            // Shift data for every profile that moves down one slot
+                            for (let i = idx + 1; i < total; i++) {
+                                dataKeys.forEach(function(k) {
+                                    const val = localStorage.getItem('itsukime_p' + i + '_' + k);
+                                    if (val !== null) {
+                                        localStorage.setItem('itsukime_p' + (i - 1) + '_' + k, val);
+                                    } else {
+                                        localStorage.removeItem('itsukime_p' + (i - 1) + '_' + k);
+                                    }
+                                    localStorage.removeItem('itsukime_p' + i + '_' + k);
+                                });
+                            }
+
+                            meta.profiles.splice(idx, 1);
+                            if (meta.profiles.length === 0) {
+                                meta.active = null;
+                            } else if (meta.active === idx) {
+                                meta.active = 0;
+                            } else if (meta.active > idx) {
+                                meta.active = meta.active - 1;
+                            }
+                            saveProfilesMeta(meta);
+                            if (meta.profiles.length === 0 || meta.active === null) {
+                                watchHistory = []; continueWatching = []; bookmarks = [];
+                                displayContinueWatching();
+                                showProfilePicker();
+                            } else {
+                                activateProfile(meta.active);
+                                const overlay = document.getElementById('profilePickerOverlay');
+                                if (overlay) { showProfilePicker(); } else { showProfile(); }
+                            }
+                        }
+
+                        function deleteProfile(idx) {
+                            const meta = getProfilesMeta();
+                            const profileName = (meta.profiles[idx] && meta.profiles[idx].name) || ('Profile ' + (idx + 1));
+
+                            const backdrop = document.createElement('div');
+                            backdrop.className = 'add-profile-backdrop';
+                            backdrop.style.zIndex = '10200';
+                            backdrop.innerHTML = `
+                                <div class="del-confirm-card">
+                                    <div class="del-confirm-icon">🗑️</div>
+                                    <div class="del-confirm-title">Delete "${profileName}"?</div>
+                                    <div class="del-confirm-desc">This will permanently erase all watch history, bookmarks, and continue watching for this profile.</div>
+                                    <div class="del-confirm-btns">
+                                        <button class="del-confirm-btn-cancel" id="delCancel">Keep It</button>
+                                        <button class="del-confirm-btn-delete" id="delConfirm">Delete</button>
+                                    </div>
+                                </div>`;
+                            document.body.appendChild(backdrop);
+
+                            backdrop.querySelector('#delCancel').addEventListener('click', function() {
+                                backdrop.remove();
+                            });
+                            backdrop.querySelector('#delConfirm').addEventListener('click', function() {
+                                backdrop.remove();
+                                _executeDeleteProfile(idx);
+                            });
+                            backdrop.addEventListener('click', function(e) {
+                                if (e.target === backdrop) backdrop.remove();
+                            });
+                        }
+                        window.deleteProfile = deleteProfile;
+
+                        // Show the Add Profile modal; calls onDone(true, newIdx) on create, onDone(false) on cancel
+                        function showAddProfileModal(onDone) {
+                            let selectedIcon = 'img:miku.png';
+                            const backdrop = document.createElement('div');
+                            backdrop.className = 'add-profile-backdrop';
+                            const optHTML = ICON_OPTIONS.map(function(o) {
+                                const sel = o.icon === selectedIcon ? ' ip-selected' : '';
+                                const inner = o.icon.startsWith('img:')
+                                    ? '<img src="/icons/' + encodeURIComponent(iconFileName(o.icon)) + '">'
+                                    : '<span style="font-size:1.5rem;">' + o.icon.slice(6) + '</span>';
+                                return '<div class="ip-option' + sel + '" data-icon="' + o.icon + '">' + inner + '</div>';
+                            }).join('');
+                            backdrop.innerHTML = `
+                                <div class="add-profile-card">
+                                    <p class="add-profile-title">New Profile</p>
+                                    <div class="icon-picker-grid" id="apIconGrid">${optHTML}</div>
+                                    <input class="add-profile-name-input" id="apNameInput" placeholder="Enter a name…" maxlength="20" />
+                                    <div class="add-profile-btns">
+                                        <button class="add-profile-btn-cancel" id="apCancel">Cancel</button>
+                                        <button class="add-profile-btn-create" id="apCreate">Create</button>
+                                    </div>
+                                </div>`;
+                            document.body.appendChild(backdrop);
+                            backdrop.querySelector('#apIconGrid').addEventListener('click', function(e) {
+                                const opt = e.target.closest('.ip-option');
+                                if (!opt) return;
+                                backdrop.querySelectorAll('.ip-option').forEach(el => el.classList.remove('ip-selected'));
+                                opt.classList.add('ip-selected');
+                                selectedIcon = opt.dataset.icon;
+                            });
+                            function doCreate() {
+                                const name = (backdrop.querySelector('#apNameInput').value.trim())
+                                    || ('Profile ' + (getProfilesMeta().profiles.length + 1));
+                                const meta = getProfilesMeta();
+                                meta.profiles.push({ name: name, icon: selectedIcon });
+                                saveProfilesMeta(meta);
+                                backdrop.remove();
+                                if (onDone) onDone(true, meta.profiles.length - 1);
+                            }
+                            backdrop.querySelector('#apCreate').addEventListener('click', doCreate);
+                            backdrop.querySelector('#apCancel').addEventListener('click', function() {
+                                backdrop.remove();
+                                if (onDone) onDone(false);
+                            });
+                            backdrop.querySelector('#apNameInput').addEventListener('keydown', function(e) {
+                                if (e.key === 'Enter') doCreate();
+                            });
+                            backdrop.querySelector('#apNameInput').focus();
+                        }
+                        window.showAddProfileModal = showAddProfileModal;
+
+                        // Add a profile and immediately switch to it (used from Profile tab)
+                        function addProfileFromTab() {
+                            showAddProfileModal(function(created, newIdx) {
+                                if (created) switchProfile(newIdx);
+                            });
+                        }
+                        window.addProfileFromTab = addProfileFromTab;
+
+                        // Show the full-screen "Who's Watching?" picker
+                        function showProfilePicker() {
+                            const existing = document.getElementById('profilePickerOverlay');
+                            if (existing) existing.remove();
+                            const pb = document.getElementById('pageBlocker');
+                            if (pb) pb.remove();
+
+                            const overlay = document.createElement('div');
+                            overlay.className = 'profile-picker-overlay';
+                            overlay.id = 'profilePickerOverlay';
+
+                            function renderOverlay() {
+                                const m = getProfilesMeta();
+                                let cards = m.profiles.map(function(p, i) {
+                                    const inner = iconInnerHTML(p.icon, '2.2rem');
+                                    return '<div class="profile-picker-card" data-pick="' + i + '">'
+                                        + '<button class="profile-picker-delete" data-del="' + i + '" title="Delete">✕</button>'
+                                        + '<div class="profile-picker-avatar">' + inner + '</div>'
+                                        + '<div class="profile-picker-name">' + (p.name || 'Profile ' + (i+1)) + '</div>'
+                                        + '</div>';
+                                }).join('');
+                                if (m.profiles.length < PROFILE_COUNT_MAX) {
+                                    cards += '<div class="profile-picker-card profile-picker-add-card" data-add="1">'
+                                        + '<div class="profile-picker-avatar">+</div>'
+                                        + '<div class="profile-picker-name">Add Profile</div>'
+                                        + '</div>';
+                                }
+                                overlay.innerHTML = '<p class="profile-picker-title">Who\'s Watching?</p>'
+                                    + '<div class="profile-picker-grid" id="pickerGrid">' + cards + '</div>';
+
+                                overlay.querySelector('#pickerGrid').addEventListener('click', function(e) {
+                                    const delBtn = e.target.closest('[data-del]');
+                                    if (delBtn) { e.stopPropagation(); deleteProfile(parseInt(delBtn.dataset.del)); return; }
+                                    if (e.target.closest('[data-add]')) {
+                                        showAddProfileModal(function(created) { if (created) showProfilePicker(); });
+                                        return;
+                                    }
+                                    const card = e.target.closest('[data-pick]');
+                                    if (card) { overlay.remove(); activateProfile(parseInt(card.dataset.pick)); }
+                                });
+                            }
+                            renderOverlay();
+                            document.body.appendChild(overlay);
+                        }
+                        window.showProfilePicker = showProfilePicker;
+
+                        function openIconPicker(profileIdx) {
+                            const meta = getProfilesMeta();
+                            const current = meta.profiles[profileIdx].icon;
+                            const backdrop = document.createElement('div');
+                            backdrop.className = 'icon-picker-backdrop';
+                            const optHTML = ICON_OPTIONS.map(function(o) {
+                                const sel = o.icon === current ? ' ip-selected' : '';
+                                const inner = o.icon.startsWith('img:')
+                                    ? '<img src="/icons/' + encodeURIComponent(iconFileName(o.icon)) + '">'
+                                    : '<span style="font-size:1.5rem;">' + o.icon.slice(6) + '</span>';
+                                return '<div class="ip-option' + sel + '" data-icon="' + o.icon + '">' + inner + '</div>';
+                            }).join('');
+                            backdrop.innerHTML = '<div class="icon-picker-card"><p class="icon-picker-title">Choose Icon</p>'
+                                + '<div class="icon-picker-grid">' + optHTML + '</div>'
+                                + '<p class="icon-picker-close">✕ Close</p></div>';
+                            document.body.appendChild(backdrop);
+                            backdrop.addEventListener('click', function(e) {
+                                const opt = e.target.closest('.ip-option');
+                                if (opt) {
+                                    meta.profiles[profileIdx].icon = opt.dataset.icon;
+                                    saveProfilesMeta(meta);
+                                    backdrop.remove();
+                                    showProfile();
+                                    return;
+                                }
+                                if (e.target === backdrop || e.target.classList.contains('icon-picker-close')) backdrop.remove();
+                            });
+                        }
 
                         // Initialize elements
                         const videoPlayer = document.getElementById('videoPlayer');
@@ -2559,34 +3143,35 @@
 
                         const homeBtn = document.getElementById('homeBtn');
                         const historyBtn = document.getElementById('historyBtn');
+                        const bookmarksNavBtn = document.getElementById('bookmarksNavBtn');
                         const profileBtn = document.getElementById('profileBtn');
                         const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
-                        // Load watch history from localStorage
+                        // Load watch history from localStorage (profile-aware)
                         function loadWatchHistory() {
-                            const saved = localStorage.getItem('itsukime_history');
+                            const saved = localStorage.getItem(getPKey('history'));
                             if (saved) {
                                 watchHistory = JSON.parse(saved);
                                 displayWatchHistory();
                             }
 
-                            const savedContinue = localStorage.getItem('itsukime_continue_watching');
+                            const savedContinue = localStorage.getItem(getPKey('continue_watching'));
                             if (savedContinue) {
                                 continueWatching = JSON.parse(savedContinue);
                                 displayContinueWatching();
                             }
 
-                            const savedBookmarks = localStorage.getItem('itsukime_bookmarks');
+                            const savedBookmarks = localStorage.getItem(getPKey('bookmarks'));
                             if (savedBookmarks) {
                                 bookmarks = JSON.parse(savedBookmarks);
                             }
                         }
 
-                        // Save watch history to localStorage
+                        // Save watch history to localStorage (profile-aware)
                         function saveWatchHistory() {
-                            localStorage.setItem('itsukime_history', JSON.stringify(watchHistory));
-                            localStorage.setItem('itsukime_continue_watching', JSON.stringify(continueWatching));
-                            localStorage.setItem('itsukime_bookmarks', JSON.stringify(bookmarks));
+                            localStorage.setItem(getPKey('history'), JSON.stringify(watchHistory));
+                            localStorage.setItem(getPKey('continue_watching'), JSON.stringify(continueWatching));
+                            localStorage.setItem(getPKey('bookmarks'), JSON.stringify(bookmarks));
                         }
 
                         // Add to watch history
@@ -2643,7 +3228,6 @@
                         setInterval(updateCurrentProgress, 5000);
 
                         // ── Recently Added Section (horizontal draggable) ─────────────────
-                        let serverRecentlyAdded = null;
 
                         function buildRecentlyAddedSection(serverList) {
                             const section = document.getElementById('recentlyAddedSection');
@@ -2656,10 +3240,12 @@
 
                             if (!entries || entries.length === 0) {
                                 section.classList.add('hidden');
+                                syncGridWithRecentlyAdded();
                                 return;
                             }
 
                             section.classList.remove('hidden');
+                            syncGridWithRecentlyAdded();
                             row.innerHTML = '';
 
                             entries.forEach((item) => {
@@ -2963,6 +3549,7 @@
                             backBtn.classList.add('hidden');
                             homeBtn.classList.add('active');
                             historyBtn.classList.remove('active');
+                            bookmarksNavBtn.classList.remove('active');
                             profileBtn.classList.remove('active');
                         }
 
@@ -2980,12 +3567,13 @@
                             backBtn.classList.add('hidden');
                             homeBtn.classList.remove('active');
                             historyBtn.classList.add('active');
+                            bookmarksNavBtn.classList.remove('active');
                             profileBtn.classList.remove('active');
 
                             displayWatchHistory();
                         }
 
-                        function showProfile() {
+                        function showBookmarks() {
                             homeGrid.classList.add('hidden');
                             historyGrid.classList.remove('hidden');
                             animeDetail.classList.remove('visible');
@@ -2999,10 +3587,121 @@
                             backBtn.classList.add('hidden');
                             homeBtn.classList.remove('active');
                             historyBtn.classList.remove('active');
+                            bookmarksNavBtn.classList.add('active');
+                            profileBtn.classList.remove('active');
+
+                            let bookmarkSort = localStorage.getItem(getPKey('bookmark_sort')) || 'recent';
+
+                            function buildBookmarksListHTML(sort) {
+                                if (bookmarks.length === 0) {
+                                    return '<p style="color: #666; margin-top: 1rem;">No bookmarked anime yet</p>';
+                                }
+                                const sorted = [...bookmarks];
+                                if (sort === 'az') sorted.sort((a, b) => a.name.localeCompare(b.name));
+                                else if (sort === 'za') sorted.sort((a, b) => b.name.localeCompare(a.name));
+                                else sorted.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+                                let html = '<div class="history-grid visible" style="margin-top: 1rem; grid-template-columns: repeat(3, 1fr) !important;">';
+                                sorted.forEach(anime => {
+                                    html += `<div class="anime-card" onclick="showAnimeDetailByChannel('${anime.channelName}')">
+                                        <img src="${anime.imageUrl}" alt="${anime.name}" class="anime-image">
+                                        <div class="anime-info"><div class="anime-name">${anime.name}</div></div>
+                                    </div>`;
+                                });
+                                html += '</div>';
+                                return html;
+                            }
+
+                            historyItems.innerHTML = `
+                                <div class="profile-view">
+                                    <div style="display:flex; align-items:center; justify-content:space-between; border-bottom: 1px solid var(--border-accent); padding-bottom: 0.5rem; margin-bottom: 0.25rem; margin-top: 1rem;">
+                                        <h4 style="color: var(--accent-soft); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin:0;">Bookmarked Anime</h4>
+                                        <select id="bookmarkSortSelectNav" style="background:var(--bg-card);color:var(--text-dim);border:1px solid var(--border-accent);border-radius:6px;padding:0.2rem 0.4rem;font-size:0.72rem;font-weight:700;cursor:pointer;">
+                                            <option value="recent" ${bookmarkSort==='recent'?'selected':''}>Recently Added</option>
+                                            <option value="az"     ${bookmarkSort==='az'?'selected':''}>A → Z</option>
+                                            <option value="za"     ${bookmarkSort==='za'?'selected':''}>Z → A</option>
+                                        </select>
+                                    </div>
+                                    <div id="bookmarksContainerNav">${buildBookmarksListHTML(bookmarkSort)}</div>
+                                </div>
+                            `;
+
+                            const sortSel = document.getElementById('bookmarkSortSelectNav');
+                            if (sortSel) {
+                                sortSel.addEventListener('change', function() {
+                                    bookmarkSort = this.value;
+                                    localStorage.setItem(getPKey('bookmark_sort'), bookmarkSort);
+                                    document.getElementById('bookmarksContainerNav').innerHTML = buildBookmarksListHTML(bookmarkSort);
+                                });
+                            }
+                        }
+
+                        function showProfile() {
+                            // Guard: if no active profile, show the picker instead
+                            const _pm = getProfilesMeta();
+                            if (_pm.active === null || !_pm.profiles.length) {
+                                showProfilePicker();
+                                return;
+                            }
+
+                            homeGrid.classList.add('hidden');
+                            historyGrid.classList.remove('hidden');
+                            animeDetail.classList.remove('visible');
+                            mainContent.classList.remove('visible');
+                            loadMoreContainer.style.display = 'none';
+                            continueWatchingSection.classList.add('hidden');
+                            seasonalSection.classList.add('hidden');
+                            document.getElementById('recentlyAddedSection').classList.add('hidden');
+                            document.getElementById('recentlyAddedTitle').style.display = 'none';
+
+                            backBtn.classList.add('hidden');
+                            homeBtn.classList.remove('active');
+                            historyBtn.classList.remove('active');
+                            bookmarksNavBtn.classList.remove('active');
                             profileBtn.classList.add('active');
 
                             // Show profile view
-                            let bookmarkSort = localStorage.getItem('itsukime_bookmark_sort') || 'recent';
+                            let bookmarkSort = localStorage.getItem(getPKey('bookmark_sort')) || 'recent';
+
+                            const profilesMeta = getProfilesMeta();
+                            const activeIdx = profilesMeta.active;
+                            const activeProfile = profilesMeta.profiles[activeIdx];
+
+                            // Build profile switcher with delete buttons + Add slot
+                            function buildSwitcherHTML() {
+                                let s = '<div class="profile-switcher">';
+                                profilesMeta.profiles.forEach(function(p, i) {
+                                    const isActive = i === activeIdx;
+                                    const avatarInner = iconInnerHTML(p.icon, '1.3rem');
+                                    s += '<div class="profile-slot' + (isActive ? ' active' : '') + '" onclick="switchProfile(' + i + ')">'
+                                        + '<div class="ps-avatar">' + avatarInner + '</div>'
+                                        + '<div class="ps-name">' + (p.name || 'Profile ' + (i+1)) + '</div>'
+                                        + '<button class="ps-delete-btn" onclick="event.stopPropagation();deleteProfile(' + i + ')" title="Delete">✕</button>'
+                                        + '</div>';
+                                });
+                                if (profilesMeta.profiles.length < PROFILE_COUNT_MAX) {
+                                    s += '<div class="profile-slot" onclick="addProfileFromTab()" style="border-style:dashed;opacity:0.65;">'
+                                        + '<div class="ps-avatar" style="font-size:1.4rem;border-style:dashed;">+</div>'
+                                        + '<div class="ps-name">Add</div>'
+                                        + '</div>';
+                                }
+                                s += '</div>';
+                                return s;
+                            }
+
+                            // Build large avatar for active profile
+                            function buildAvatarHTML() {
+                                let inner = '';
+                                if (activeProfile.icon && activeProfile.icon.startsWith('img:')) {
+                                    inner = '<img src="/icons/' + encodeURIComponent(iconFileName(activeProfile.icon)) + '">';
+                                } else {
+                                    const em = (activeProfile.icon || 'emoji:👤').slice(6);
+                                    inner = '<span style="font-size:2.6rem;">' + em + '</span>';
+                                }
+                                return '<div class="profile-avatar-wrap" id="profileAvatarWrap">'
+                                    + '<div class="profile-avatar-large">' + inner + '</div>'
+                                    + '<div class="profile-avatar-edit-hint">✎</div>'
+                                    + '</div>';
+                            }
 
                             function buildBookmarksHTML(sort) {
                                 if (bookmarks.length === 0) {
@@ -3032,27 +3731,21 @@
 
                             historyItems.innerHTML = `
                                 <div class="profile-view">
-                                    <div class="profile-avatar">👤</div>
-                                    <h3 class="profile-title">Itsukime Viewer</h3>
-                                    <p style="color: var(--text-dim); margin-bottom: 1rem;">Your personal anime streaming</p>
+                                    ${buildSwitcherHTML()}
+                                    ${buildAvatarHTML()}
+                                    <div class="profile-name-edit">
+                                        <input class="profile-name-input" id="profileNameInput"
+                                            value="${(activeProfile.name || 'Profile ' + (activeIdx+1)).replace(/"/g, '&quot;')}"
+                                            maxlength="20" placeholder="Profile name" title="Click to rename" />
+                                    </div>
+                                    <p style="color: var(--text-dim); font-size:0.78rem; margin-bottom: 1.2rem;">Click avatar to change icon · Click name to rename</p>
                                     <div class="theme-toggle">
                                         <div class="theme-toggle-option ${cur === 'light' ? 'active' : ''}" data-theme="light" onclick="setTheme('light')">☀️ Light</div>
                                         <div class="theme-toggle-option ${cur === 'dark' ? 'active' : ''}" data-theme="dark" onclick="setTheme('dark')">🌙 Dark</div>
                                     </div>
                                     <div class="profile-stats" style="margin-top: 2rem;">
                                         <p>Episodes watched: <span>${watchHistory.length}</span></p>
-                                        <p style="margin-top: 0.5rem;">Member since: <span>${new Date().toLocaleDateString()}</span></p>
-                                    </div>
-                                    <div style="text-align: left; margin-top: 2rem;">
-                                        <div style="display:flex; align-items:center; justify-content:space-between; border-bottom: 1px solid var(--border-accent); padding-bottom: 0.5rem; margin-bottom: 0.25rem;">
-                                            <h4 style="color: var(--accent-soft); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin:0;">Bookmarked Anime</h4>
-                                            <select id="bookmarkSortSelect" style="background:var(--bg-card);color:var(--text-dim);border:1px solid var(--border-accent);border-radius:6px;padding:0.2rem 0.4rem;font-size:0.72rem;font-weight:700;cursor:pointer;">
-                                                <option value="recent" ${bookmarkSort==='recent'?'selected':''}>Recently Added</option>
-                                                <option value="az"     ${bookmarkSort==='az'?'selected':''}>A → Z</option>
-                                                <option value="za"     ${bookmarkSort==='za'?'selected':''}>Z → A</option>
-                                            </select>
-                                        </div>
-                                        <div id="bookmarksContainer">${buildBookmarksHTML(bookmarkSort)}</div>
+                                        <p style="margin-top: 0.5rem;">Bookmarks: <span>${bookmarks.length}</span></p>
                                     </div>
 
                                     <div class="profile-footer">
@@ -3078,11 +3771,40 @@
                                 </div>
                             `;
 
+                            // Avatar click → open icon picker
+                            const avatarWrap = document.getElementById('profileAvatarWrap');
+                            if (avatarWrap) {
+                                avatarWrap.addEventListener('click', function() {
+                                    openIconPicker(activeIdx);
+                                });
+                            }
+
+                            // Name input → save on blur/Enter
+                            const nameInput = document.getElementById('profileNameInput');
+                            if (nameInput) {
+                                function saveName() {
+                                    const newName = nameInput.value.trim() || ('Profile ' + (activeIdx + 1));
+                                    const m = getProfilesMeta();
+                                    m.profiles[activeIdx].name = newName;
+                                    saveProfilesMeta(m);
+                                    // Update the switcher slot label in-place
+                                    const slots = document.querySelectorAll('.profile-slot');
+                                    if (slots[activeIdx]) {
+                                        const nameEl = slots[activeIdx].querySelector('.ps-name');
+                                        if (nameEl) nameEl.textContent = newName;
+                                    }
+                                }
+                                nameInput.addEventListener('blur', saveName);
+                                nameInput.addEventListener('keydown', function(e) {
+                                    if (e.key === 'Enter') { nameInput.blur(); }
+                                });
+                            }
+
                             const sortSelect = document.getElementById('bookmarkSortSelect');
                             if (sortSelect) {
                                 sortSelect.addEventListener('change', () => {
                                     bookmarkSort = sortSelect.value;
-                                    localStorage.setItem('itsukime_bookmark_sort', bookmarkSort);
+                                    localStorage.setItem(getPKey('bookmark_sort'), bookmarkSort);
                                     document.getElementById('bookmarksContainer').innerHTML = buildBookmarksHTML(bookmarkSort);
                                 });
                             }
@@ -3206,6 +3928,7 @@
                             backBtn.classList.remove('hidden');
                             homeBtn.classList.remove('active');
                             historyBtn.classList.remove('active');
+                            bookmarksNavBtn.classList.remove('active');
                             profileBtn.classList.remove('active');
 
                             await loadChannel(channelName, metadata.name, episodeToPlay);
@@ -3667,6 +4390,7 @@
                         // Navigation event listeners
                         homeBtn.addEventListener('click', showHome);
                         historyBtn.addEventListener('click', showHistory);
+                        bookmarksNavBtn.addEventListener('click', showBookmarks);
                         profileBtn.addEventListener('click', showProfile);
                         clearHistoryBtn.addEventListener('click', clearWatchHistory);
 
@@ -3697,22 +4421,52 @@
                         });
 
                         // Build home grid cards dynamically if the page loaded before metadata was ready
+                        function getRecentlyAddedChannelSet() {
+                            return new Set((serverRecentlyAdded || []).map(r => r.channelName));
+                        }
+
+                        function syncGridWithRecentlyAdded() {
+                            const grid = document.getElementById('homeGrid');
+                            if (!grid) return;
+                            const excluded = getRecentlyAddedChannelSet();
+                            let visibleIndex = 0;
+                            grid.querySelectorAll('.anime-card[data-channel]').forEach(card => {
+                                const ch = card.dataset.channel;
+                                if (excluded.has(ch)) {
+                                    card.style.display = 'none';
+                                } else {
+                                    card.style.display = '';
+                                    card.dataset.index = String(visibleIndex);
+                                    if (visibleIndex >= 80) {
+                                        card.classList.add('hidden-anime');
+                                    } else {
+                                        card.classList.remove('hidden-anime');
+                                    }
+                                    visibleIndex++;
+                                }
+                            });
+                            updateLoadMoreVisibility();
+                        }
+
                         function buildHomeGridIfEmpty() {
                             const grid = document.getElementById('homeGrid');
                             if (!grid || grid.querySelector('.anime-card[data-index]')) return;
                             const entries = Object.entries(animeMetadata);
                             if (entries.length === 0) return;
+                            const excluded = getRecentlyAddedChannelSet();
                             grid.innerHTML = '';
-                            entries.forEach(([channelName, metadata], index) => {
+                            let gridIndex = 0;
+                            entries.forEach(([channelName, metadata]) => {
+                                if (excluded.has(channelName)) return;
                                 const card = document.createElement('div');
-                                card.className = 'anime-card' + (index >= 80 ? ' hidden-anime' : '');
+                                card.className = 'anime-card' + (gridIndex >= 80 ? ' hidden-anime' : '');
                                 card.dataset.channel = channelName;
-                                card.dataset.index = String(index);
+                                card.dataset.index = String(gridIndex);
                                 card.dataset.genres = (metadata.genres || []).join(',');
                                 const genreTags = (metadata.genres || []).slice(0, 2)
                                     .map(g => `<span class="genre-tag">${g}</span>`).join('');
                                 card.innerHTML = `
-                                    <img src="${metadata.imageUrl || ''}" alt="${(metadata.name || '').replace(/"/g, '&quot;')}" class="anime-image" loading="${index < 20 ? 'eager' : 'lazy'}" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                                    <img src="${metadata.imageUrl || ''}" alt="${(metadata.name || '').replace(/"/g, '&quot;')}" class="anime-image" loading="${gridIndex < 20 ? 'eager' : 'lazy'}" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
                                     <div class="anime-info">
                                         <div class="anime-name">${metadata.name || channelName}</div>
                                         <div class="anime-genres">${genreTags}</div>
@@ -3721,7 +4475,7 @@
                                     const meta = animeMetadata[channelName];
                                     if (meta) showAnimeDetail(meta, channelName);
                                 });
-                                if (index < 80) {
+                                if (gridIndex < 80) {
                                     if (fadeObserver) {
                                         fadeObserver.observe(card);
                                     } else {
@@ -3729,6 +4483,7 @@
                                     }
                                 }
                                 grid.appendChild(card);
+                                gridIndex++;
                             });
                             updateLoadMoreVisibility();
                         }
@@ -3745,9 +4500,6 @@
                                 if (!homeGrid.classList.contains('hidden')) {
                                     buildRecentlyAddedSection();
                                 }
-                            }
-                            if (data.synonyms) {
-                                synonymMap = data.synonyms;
                             }
                         });
 
@@ -3933,7 +4685,12 @@
                         startSeasonalAuto();
 
                         // Initialize
-                        loadWatchHistory();
+                        (function() {
+                            const _m = getProfilesMeta();
+                            if (_m.active !== null && _m.profiles.length > 0) {
+                                loadWatchHistory();
+                            }
+                        })();
                         buildRecentlyAddedSection();
 
                         // ── Genre Filter Bar ─────────────────────────────────────────────
@@ -4461,15 +5218,22 @@
 
                     <script>
                         (function () {
+                            const overlay = document.getElementById('welcomeOverlay');
+                            const pb = document.getElementById('pageBlocker');
+                            if (pb) pb.remove();
+                            function closeWelcome() {
+                                overlay.classList.add('hidden');
+                                showProfilePicker();
+                            }
                             if (!localStorage.getItem('firstVisit')) {
                                 localStorage.setItem('firstVisit', 'true');
-                                document.getElementById('welcomeOverlay').classList.remove('hidden');
+                                overlay.classList.remove('hidden');
+                            } else {
+                                showProfilePicker();
                             }
-                            document.getElementById('welcomeCloseBtn').addEventListener('click', function () {
-                                document.getElementById('welcomeOverlay').classList.add('hidden');
-                            });
-                            document.getElementById('welcomeOverlay').addEventListener('click', function (e) {
-                                if (e.target === this) this.classList.add('hidden');
+                            document.getElementById('welcomeCloseBtn').addEventListener('click', closeWelcome);
+                            overlay.addEventListener('click', function (e) {
+                                if (e.target === this) closeWelcome();
                             });
                         })();
                     </script>
