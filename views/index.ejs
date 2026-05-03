@@ -208,6 +208,33 @@
                         }
                         .filter-btn.genre-active .filter-badge { display: block; }
 
+                        /* Surprise Me button */
+                        .surprise-btn {
+                            flex-shrink: 0;
+                            width: 44px; height: 44px;
+                            border-radius: 50%;
+                            background: var(--input-bg);
+                            border: 2px solid var(--border-accent);
+                            box-shadow: 0 0 18px var(--accent-glow);
+                            color: var(--text-dim);
+                            cursor: pointer;
+                            display: flex; align-items: center; justify-content: center;
+                            transition: all 0.2s ease;
+                        }
+                        .surprise-btn:hover {
+                            border-color: var(--accent);
+                            color: var(--accent);
+                            transform: rotate(20deg) scale(1.08);
+                        }
+                        .surprise-btn svg { width: 18px; height: 18px; }
+                        .surprise-btn.spinning svg {
+                            animation: spinOnce 0.45s ease-out;
+                        }
+                        @keyframes spinOnce {
+                            from { transform: rotate(0deg); }
+                            to   { transform: rotate(360deg); }
+                        }
+
                         .search-bar:focus {
                             border-color: var(--accent-bright);
                             box-shadow: 0 0 28px var(--accent-glow);
@@ -1219,10 +1246,10 @@
                             transition: filter 0.2s;
                         }
                         .nav-btn:hover i {
-                            filter: grayscale(0.4) brightness(0.9);
+                            filter: grayscale(1) brightness(1.1);
                         }
                         .nav-btn.active i {
-                            filter: grayscale(0) brightness(1);
+                            filter: grayscale(1) brightness(1.4);
                         }
 
                         .nav-btn span {
@@ -1450,7 +1477,7 @@
                         /* Profile Picker Overlay (Netflix-style) */
                         .profile-picker-overlay {
                             position: fixed; inset: 0;
-                            background: #0d0d0f;
+                            background: var(--bg-primary);
                             z-index: 10000;
                             display: flex; flex-direction: column;
                             align-items: center; justify-content: center;
@@ -1458,7 +1485,7 @@
                         }
                         .profile-picker-title {
                             font-size: 1.9rem; font-weight: 800;
-                            color: #fff; margin-bottom: 2.5rem;
+                            color: var(--text-primary); margin-bottom: 2.5rem;
                             letter-spacing: 0.3px; text-align: center;
                         }
                         .profile-picker-grid {
@@ -1476,21 +1503,21 @@
                         .profile-picker-card:hover { border-color: var(--accent); transform: scale(1.06); }
                         .profile-picker-avatar {
                             width: 80px; height: 80px; border-radius: 8px;
-                            overflow: hidden; background: #1e1e28;
+                            overflow: hidden; background: var(--bg-card);
                             display: flex; align-items: center; justify-content: center;
-                            font-size: 2.3rem; border: 2px solid #333;
+                            font-size: 2.3rem; border: 2px solid var(--border-color);
                         }
                         .profile-picker-avatar img { width: 100%; height: 100%; object-fit: cover; }
                         .profile-picker-card:hover .profile-picker-avatar { border-color: var(--accent); }
                         .profile-picker-name {
-                            font-size: 0.82rem; font-weight: 600; color: #aaa;
+                            font-size: 0.82rem; font-weight: 600; color: var(--text-muted);
                             max-width: 90px; overflow: hidden;
                             text-overflow: ellipsis; white-space: nowrap; text-align: center;
                         }
-                        .profile-picker-card:hover .profile-picker-name { color: #fff; }
+                        .profile-picker-card:hover .profile-picker-name { color: var(--text-primary); }
                         .profile-picker-add-card .profile-picker-avatar {
-                            font-size: 2.2rem; color: #666;
-                            border: 2px dashed #444; background: transparent;
+                            font-size: 2.2rem; color: var(--text-dim);
+                            border: 2px dashed var(--border-color); background: transparent;
                         }
                         .profile-picker-add-card:hover .profile-picker-avatar {
                             border-color: var(--accent); color: var(--accent-soft);
@@ -1498,8 +1525,8 @@
                         .profile-picker-delete {
                             position: absolute; top: 4px; right: 4px;
                             width: 20px; height: 20px;
-                            background: rgba(0,0,0,0.75); color: #888;
-                            border: 1px solid #555; border-radius: 50%;
+                            background: var(--bg-secondary); color: var(--text-dim);
+                            border: 1px solid var(--border-color); border-radius: 50%;
                             font-size: 0.6rem; display: flex;
                             align-items: center; justify-content: center;
                             cursor: pointer; opacity: 0; transition: all 0.15s;
@@ -1511,8 +1538,8 @@
                         .ps-delete-btn {
                             position: absolute; top: -5px; right: -5px;
                             width: 18px; height: 18px;
-                            background: rgba(0,0,0,0.85); color: #888;
-                            border: 1px solid #555; border-radius: 50%;
+                            background: var(--bg-secondary); color: var(--text-dim);
+                            border: 1px solid var(--border-color); border-radius: 50%;
                             font-size: 0.55rem; display: flex;
                             align-items: center; justify-content: center;
                             cursor: pointer; opacity: 0; transition: all 0.15s; padding: 0;
@@ -2298,7 +2325,7 @@
                             border: 1px solid var(--border-color);
                             transition: all 0.28s ease;
                             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-                            background: #0d0d0d;
+                            background: var(--bg-player);
                             aspect-ratio: 16/9;
                             min-width: 260px;
                             width: 260px;
@@ -2574,7 +2601,7 @@
                     </style>
                 </head>
                 <body>
-                    <div id="pageBlocker" style="position:fixed;inset:0;background:#0d0d0f;z-index:9997;pointer-events:none;"></div>
+                    <div id="pageBlocker" style="position:fixed;inset:0;background:var(--bg-primary);z-index:9997;pointer-events:none;"></div>
                     <div class="container">
                         <div class="header">
                             <h1>Itsukime</h1>
@@ -2596,6 +2623,16 @@
                                     <line x1="11" y1="18" x2="13" y2="18"/>
                                 </svg>
                                 <span class="filter-badge"></span>
+                            </button>
+                            <button class="surprise-btn" id="surpriseBtn" title="Surprise Me — pick a random anime">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="2" width="20" height="20" rx="4"/>
+                                    <circle cx="8"  cy="8"  r="1.2" fill="currentColor" stroke="none"/>
+                                    <circle cx="16" cy="8"  r="1.2" fill="currentColor" stroke="none"/>
+                                    <circle cx="8"  cy="16" r="1.2" fill="currentColor" stroke="none"/>
+                                    <circle cx="16" cy="16" r="1.2" fill="currentColor" stroke="none"/>
+                                    <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+                                </svg>
                             </button>
                             <div class="dropdown" id="dropdown"></div>
                         </div>
@@ -2671,7 +2708,7 @@
 
                         <!-- History Grid -->
                         <div class="history-grid hidden" id="historyGrid">
-                            <div class="history-header">
+                            <div class="history-header" id="historyHeader">
                                 <h2 class="history-title">History</h2>
                                 <button class="clear-history-btn" id="clearHistoryBtn">Clear</button>
                             </div>
@@ -3132,6 +3169,7 @@
                         const homeGrid = document.getElementById('homeGrid');
                         const historyGrid = document.getElementById('historyGrid');
                         const historyItems = document.getElementById('historyItems');
+                        let currentTab = 'home';
                         const animeDetail = document.getElementById('animeDetail');
                         const mainContent = document.getElementById('mainContent');
                         const backBtn = document.getElementById('backBtn');
@@ -3315,7 +3353,7 @@
                             const continueWatchingGrid = document.getElementById('continueWatchingGrid');
                             if (!continueWatchingGrid) return;
 
-                            if (continueWatching.length === 0 || animeDetail.classList.contains('visible') || mainContent.classList.contains('visible')) {
+                            if (currentTab !== 'home' || continueWatching.length === 0 || animeDetail.classList.contains('visible') || mainContent.classList.contains('visible')) {
                                 continueWatchingSection.classList.add('hidden');
                                 return;
                             }
@@ -3530,6 +3568,7 @@
                         updateLoadMoreVisibility();
 
                         function showHome() {
+                            currentTab = 'home';
                             homeGrid.classList.remove('hidden');
                             historyGrid.classList.add('hidden');
                             animeDetail.classList.remove('visible');
@@ -3554,6 +3593,7 @@
                         }
 
                         function showHistory() {
+                            currentTab = 'history';
                             homeGrid.classList.add('hidden');
                             historyGrid.classList.remove('hidden');
                             animeDetail.classList.remove('visible');
@@ -3563,6 +3603,7 @@
                             seasonalSection.classList.add('hidden');
                             document.getElementById('recentlyAddedSection').classList.add('hidden');
                             document.getElementById('recentlyAddedTitle').style.display = 'none';
+                            document.getElementById('historyHeader').style.display = '';
 
                             backBtn.classList.add('hidden');
                             homeBtn.classList.remove('active');
@@ -3574,6 +3615,7 @@
                         }
 
                         function showBookmarks() {
+                            currentTab = 'bookmarks';
                             homeGrid.classList.add('hidden');
                             historyGrid.classList.remove('hidden');
                             animeDetail.classList.remove('visible');
@@ -3583,6 +3625,7 @@
                             seasonalSection.classList.add('hidden');
                             document.getElementById('recentlyAddedSection').classList.add('hidden');
                             document.getElementById('recentlyAddedTitle').style.display = 'none';
+                            document.getElementById('historyHeader').style.display = 'none';
 
                             backBtn.classList.add('hidden');
                             homeBtn.classList.remove('active');
@@ -3636,6 +3679,7 @@
                         }
 
                         function showProfile() {
+                            currentTab = 'profile';
                             // Guard: if no active profile, show the picker instead
                             const _pm = getProfilesMeta();
                             if (_pm.active === null || !_pm.profiles.length) {
@@ -3652,6 +3696,7 @@
                             seasonalSection.classList.add('hidden');
                             document.getElementById('recentlyAddedSection').classList.add('hidden');
                             document.getElementById('recentlyAddedTitle').style.display = 'none';
+                            document.getElementById('historyHeader').style.display = 'none';
 
                             backBtn.classList.add('hidden');
                             homeBtn.classList.remove('active');
@@ -4386,6 +4431,20 @@
                                 episode: video.episode
                             });
                         }
+
+                        // Surprise Me
+                        document.getElementById('surpriseBtn').addEventListener('click', function() {
+                            const keys = Object.keys(animeMetadata);
+                            if (!keys.length) return;
+                            const btn = this;
+                            btn.classList.add('spinning');
+                            btn.addEventListener('animationend', function handler() {
+                                btn.classList.remove('spinning');
+                                btn.removeEventListener('animationend', handler);
+                            });
+                            const pick = keys[Math.floor(Math.random() * keys.length)];
+                            showAnimeDetailByChannel(pick);
+                        });
 
                         // Navigation event listeners
                         homeBtn.addEventListener('click', showHome);
