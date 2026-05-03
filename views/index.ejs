@@ -2865,6 +2865,7 @@
                         let channelNames = <%- JSON.stringify(channelNames || []) %>;
                         let animeMetadata = <%- JSON.stringify(animeMetadata || {}) %>;
                         let serverRecentlyAdded = <%- JSON.stringify(recentlyAdded || []) %>;
+                        const SESSION_ID = '<%- sessionId %>';
                         let currentVideos = [];
                         let currentChannel = null;
                         let currentTmdbShowInfo = null;
@@ -3937,6 +3938,11 @@
                         async function showAnimeDetail(metadata, channelName, episodeToPlay = 1) {
                             currentAnimeMetadata = metadata;
                             currentChannel = channelName;
+                            fetch('/api/track', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ anime: metadata.name || channelName, sessionId: SESSION_ID })
+                            }).catch(() => {});
                             loadMoreContainer.style.display = 'none';
                             if (continueWatchingSection) {
                                 continueWatchingSection.classList.add('hidden');
