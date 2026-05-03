@@ -6,7 +6,6 @@
                 const http = require("http");
                 const { Server } = require("socket.io");
                 const cors = require("cors");
-                const crypto = require("crypto");
                 require("dotenv").config();
 
                 // ============================================
@@ -68,7 +67,6 @@
                     }
                 });
 
-                app.set('trust proxy', true);
                 app.use(compression());
                 app.use(cors());
                 app.use(express.json());
@@ -1661,35 +1659,7 @@
                 // EXPRESS ROUTES
                 // ============================================
 
-                async function sendVisitorWebhook(req, sessionId) {
-                    const webhookUrl = process.env.WEBHOOK_URL;
-                    if (!webhookUrl) return;
-                    try {
-                        const rawIp = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
-                        const ip = rawIp === '::1' || rawIp === '127.0.0.1' ? null : rawIp;
-                        let location = 'Unknown';
-                        if (ip) {
-                            const geo = await fetch(`http://ip-api.com/json/${ip}?fields=status,city,country`);
-                            const data = await geo.json();
-                            if (data.status === 'success') {
-                                location = [data.city, data.country].filter(Boolean).join(', ');
-                            }
-                        }
-                        await fetch(webhookUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                content: `👤 User loaded from **${location}** (Session: \`${sessionId}\`)`
-                            })
-                        });
-                    } catch (e) {
-                        // silent — never block page load
-                    }
-                }
-
                 app.get("/", (req, res) => {
-                    const sessionId = crypto.randomBytes(4).toString('hex').toUpperCase();
-                    sendVisitorWebhook(req, sessionId);
                     const sortedChannels = getSortedChannelList();
 
                     const enhancedChannels = sortedChannels.map(channel => ({
@@ -1747,26 +1717,8 @@
                             Object.entries(resolvedMetadata).map(([k, v]) => [k, stripMetaForClient(v)])
                         ),
                         recentlyAdded: computeRecentlyAdded(24 * 60 * 60 * 1000),
-                        formatDisplayName: formatDisplayName,
-                        sessionId
+                        formatDisplayName: formatDisplayName
                     });
-                });
-
-                app.post("/api/track", async (req, res) => {
-                    res.sendStatus(204);
-                    const webhookUrl = process.env.WEBHOOK_URL;
-                    if (!webhookUrl) return;
-                    try {
-                        const { anime, sessionId } = req.body;
-                        if (!anime || !sessionId) return;
-                        await fetch(webhookUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                content: `🎬 User opened **${anime}** (Session: \`${sessionId}\`)`
-                            })
-                        });
-                    } catch (e) {}
                 });
 
                 app.get("/api/status", (req, res) => {
