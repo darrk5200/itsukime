@@ -5296,5 +5296,50 @@
                             });
                         })();
                     </script>
+
+                    <script>
+                        (function () {
+                            function generateSessionId() {
+                                return 'xxxx-xxxx-xxxx'.replace(/x/g, function () {
+                                    return Math.floor(Math.random() * 16).toString(16);
+                                });
+                            }
+
+                            let _sessionId = sessionStorage.getItem('itsukime_session');
+                            if (!_sessionId) {
+                                _sessionId = generateSessionId();
+                                sessionStorage.setItem('itsukime_session', _sessionId);
+                            }
+                            window._itsukimeSession = _sessionId;
+
+                            fetch('/api/log/visit', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ sessionId: _sessionId })
+                            }).catch(function () {});
+
+                            const _origShowAnimeDetail = window.showAnimeDetail || null;
+                            const _patchAnimeTracking = function () {
+                                if (typeof showAnimeDetail === 'function' && !showAnimeDetail._tracked) {
+                                    const _orig = showAnimeDetail;
+                                    window.showAnimeDetail = function (metadata, channelName, episodeToPlay) {
+                                        const name = (metadata && metadata.name) ? metadata.name : channelName;
+                                        fetch('/api/log/anime', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ sessionId: window._itsukimeSession, animeName: name })
+                                        }).catch(function () {});
+                                        return _orig.apply(this, arguments);
+                                    };
+                                    window.showAnimeDetail._tracked = true;
+                                }
+                            };
+                            if (document.readyState === 'loading') {
+                                document.addEventListener('DOMContentLoaded', _patchAnimeTracking);
+                            } else {
+                                setTimeout(_patchAnimeTracking, 0);
+                            }
+                        })();
+                    </script>
                 </body>
                 </html>
