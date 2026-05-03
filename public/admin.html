@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Itsukime Admin</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        header {
+            width: 100%;
+            background: #141414;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        header span.logo {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #e81c1c;
+            letter-spacing: 0.5px;
+        }
+
+        header span.sub {
+            font-size: 0.85rem;
+            color: #666;
+            margin-left: 0.25rem;
+        }
+
+        .gate {
+            margin-top: 8vh;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 380px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .gate h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .gate p {
+            font-size: 0.83rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .gate input {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            padding: 0.7rem 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+            letter-spacing: 0.1em;
+        }
+
+        .gate input:focus {
+            border-color: #8b0000;
+        }
+
+        .gate input.error {
+            border-color: #e81c1c;
+            animation: shake 0.25s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        .gate button {
+            width: 100%;
+            background: #8b0000;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 0.7rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .gate button:hover { background: #b00000; }
+        .gate button:disabled { background: #3a3a3a; cursor: default; }
+
+        .error-msg {
+            font-size: 0.8rem;
+            color: #e81c1c;
+            display: none;
+        }
+
+        .dashboard {
+            display: none;
+            width: 100%;
+            max-width: 1100px;
+            padding: 2rem 1.5rem;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .dashboard.visible {
+            display: flex;
+        }
+
+        .dash-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .dash-header h1 {
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .dash-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            color: #ccc;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            padding: 0.45rem 0.9rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: #8b0000;
+            border-color: #8b0000;
+            color: #fff;
+        }
+
+        .search-box {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.82rem;
+            padding: 0.45rem 0.8rem;
+            outline: none;
+            width: 200px;
+            transition: border-color 0.2s;
+        }
+
+        .search-box:focus { border-color: #8b0000; }
+
+        .refresh-btn {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            color: #ccc;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            padding: 0.45rem 0.9rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .refresh-btn:hover { border-color: #8b0000; color: #fff; }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 0.35rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-card .value {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #e81c1c;
+        }
+
+        .log-container {
+            background: #0d0d0d;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .log-container .log-title {
+            background: #141414;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ccc;
+        }
+
+        .log-list {
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+        }
+
+        .log-list::-webkit-scrollbar { width: 6px; }
+        .log-list::-webkit-scrollbar-track { background: #0d0d0d; }
+        .log-list::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+
+        .log-entry {
+            padding: 0.55rem 1.25rem;
+            border-bottom: 1px solid #161616;
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+            transition: background 0.1s;
+        }
+
+        .log-entry:hover { background: #141414; }
+
+        .log-entry.type-visit .badge {
+            background: rgba(34,139,230,0.15);
+            color: #60aaff;
+            border: 1px solid rgba(34,139,230,0.25);
+        }
+
+        .log-entry.type-anime .badge {
+            background: rgba(139,0,0,0.2);
+            color: #ff6b6b;
+            border: 1px solid rgba(139,0,0,0.3);
+        }
+
+        .badge {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .log-text {
+            color: #ccc;
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .log-text .time { color: #666; }
+        .log-text .location { color: #aaa; }
+        .log-text .anime-name { color: #ff9999; font-weight: 600; }
+        .log-text .session { color: #555; font-size: 0.72rem; }
+
+        .empty-state {
+            padding: 3rem 1.25rem;
+            text-align: center;
+            color: #444;
+            font-size: 0.9rem;
+        }
+
+        .top-anime-section {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .top-anime-section .section-title {
+            background: #141414;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ccc;
+        }
+
+        .top-anime-list {
+            padding: 0.5rem 0;
+        }
+
+        .top-anime-item {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem 1.25rem;
+            border-bottom: 1px solid #1a1a1a;
+            gap: 1rem;
+        }
+
+        .top-anime-item:last-child { border-bottom: none; }
+
+        .rank {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #3a3a3a;
+            min-width: 28px;
+            text-align: right;
+        }
+
+        .rank.top1 { color: #e81c1c; }
+        .rank.top2 { color: #888; }
+        .rank.top3 { color: #7a5c00; }
+
+        .anime-info { flex: 1; }
+        .anime-info .aname { font-size: 0.88rem; font-weight: 600; }
+        .anime-info .acount { font-size: 0.75rem; color: #666; margin-top: 0.1rem; }
+
+        .bar-wrap { width: 120px; height: 5px; background: #222; border-radius: 3px; overflow: hidden; }
+        .bar-fill { height: 100%; background: #8b0000; border-radius: 3px; transition: width 0.4s; }
+
+        @media (max-width: 600px) {
+            .dash-controls { flex-direction: column; align-items: flex-start; }
+            .search-box { width: 100%; }
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header>
+    <span class="logo">Itsukime</span>
+    <span class="sub">/ Admin</span>
+</header>
+
+<div class="gate" id="gate">
+    <h2>Admin Access</h2>
+    <p>Enter the access code to view analytics logs.</p>
+    <input type="password" id="codeInput" placeholder="Access code" autocomplete="off" />
+    <div class="error-msg" id="errorMsg">Incorrect access code. Try again.</div>
+    <button id="submitBtn">Unlock</button>
+</div>
+
+<div class="dashboard" id="dashboard">
+    <div class="dash-header">
+        <h1>Analytics Dashboard</h1>
+        <div class="dash-controls">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="visit">Site Visits</button>
+            <button class="filter-btn" data-filter="anime">Anime Opens</button>
+            <input type="text" class="search-box" id="searchBox" placeholder="Search logs…" />
+            <button class="refresh-btn" id="refreshBtn">↻ Refresh</button>
+        </div>
+    </div>
+
+    <div class="stats-row" id="statsRow">
+        <div class="stat-card">
+            <div class="label">Total Visits</div>
+            <div class="value" id="statVisits">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Anime Opens</div>
+            <div class="value" id="statAnime">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Unique Sessions</div>
+            <div class="value" id="statSessions">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Total Events</div>
+            <div class="value" id="statTotal">—</div>
+        </div>
+    </div>
+
+    <div class="top-anime-section" id="topAnimeSection" style="display:none">
+        <div class="section-title">Top Anime by Opens</div>
+        <div class="top-anime-list" id="topAnimeList"></div>
+    </div>
+
+    <div class="log-container">
+        <div class="log-title">Event Log <span id="logCount" style="color:#555;font-weight:400"></span></div>
+        <div class="log-list" id="logList">
+            <div class="empty-state">Loading logs…</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allLogs = [];
+    let currentFilter = 'all';
+    let accessCode = '';
+
+    const gate = document.getElementById('gate');
+    const dashboard = document.getElementById('dashboard');
+    const codeInput = document.getElementById('codeInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const logList = document.getElementById('logList');
+    const searchBox = document.getElementById('searchBox');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const logCount = document.getElementById('logCount');
+
+    codeInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') submitBtn.click();
+    });
+
+    submitBtn.addEventListener('click', async function () {
+        const code = codeInput.value.trim();
+        if (!code) return;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Checking…';
+        errorMsg.style.display = 'none';
+        codeInput.classList.remove('error');
+
+        const ok = await fetchLogs(code);
+        if (ok) {
+            accessCode = code;
+            gate.style.display = 'none';
+            dashboard.classList.add('visible');
+        } else {
+            codeInput.classList.add('error');
+            errorMsg.style.display = 'block';
+            setTimeout(() => codeInput.classList.remove('error'), 400);
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Unlock';
+    });
+
+    async function fetchLogs(code) {
+        try {
+            const res = await fetch('/api/admin/logs?code=' + encodeURIComponent(code));
+            if (!res.ok) return false;
+            const data = await res.json();
+            allLogs = data.logs || [];
+            renderAll();
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    refreshBtn.addEventListener('click', function () {
+        fetchLogs(accessCode);
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.dataset.filter;
+            renderLogs();
+        });
+    });
+
+    searchBox.addEventListener('input', renderLogs);
+
+    function parseLog(line) {
+        const visitMatch = line.match(/^\((.+?)\) User loaded site from (.+?) \((.+?)\)$/);
+        if (visitMatch) return { type: 'visit', time: visitMatch[1], location: visitMatch[2], session: visitMatch[3], raw: line };
+        const animeMatch = line.match(/^\((.+?)\) User opened anime (.+?) \((.+?)\)$/);
+        if (animeMatch) return { type: 'anime', time: animeMatch[1], animeName: animeMatch[2], session: animeMatch[3], raw: line };
+        return { type: 'unknown', raw: line };
+    }
+
+    function renderAll() {
+        renderStats();
+        renderTopAnime();
+        renderLogs();
+    }
+
+    function renderStats() {
+        const visits = allLogs.filter(l => l.includes('User loaded site')).length;
+        const anime = allLogs.filter(l => l.includes('User opened anime')).length;
+        const sessions = new Set();
+        allLogs.forEach(function (l) {
+            const m = l.match(/\(([a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4})\)$/);
+            if (m) sessions.add(m[1]);
+        });
+        document.getElementById('statVisits').textContent = visits;
+        document.getElementById('statAnime').textContent = anime;
+        document.getElementById('statSessions').textContent = sessions.size;
+        document.getElementById('statTotal').textContent = allLogs.length;
+    }
+
+    function renderTopAnime() {
+        const counts = {};
+        allLogs.forEach(function (l) {
+            const m = l.match(/User opened anime (.+?) \([a-f0-9]{4}-/);
+            if (m) counts[m[1]] = (counts[m[1]] || 0) + 1;
+        });
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        if (sorted.length === 0) {
+            document.getElementById('topAnimeSection').style.display = 'none';
+            return;
+        }
+        document.getElementById('topAnimeSection').style.display = 'block';
+        const maxCount = sorted[0][1];
+        const rankClasses = ['top1', 'top2', 'top3'];
+        document.getElementById('topAnimeList').innerHTML = sorted.map(function ([name, count], i) {
+            const pct = Math.round((count / maxCount) * 100);
+            return `<div class="top-anime-item">
+                <div class="rank ${rankClasses[i] || ''}">${i + 1}</div>
+                <div class="anime-info">
+                    <div class="aname">${escHtml(name)}</div>
+                    <div class="acount">${count} open${count !== 1 ? 's' : ''}</div>
+                </div>
+                <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderLogs() {
+        const query = searchBox.value.toLowerCase();
+        const filtered = allLogs.filter(function (line) {
+            if (currentFilter === 'visit' && !line.includes('User loaded site')) return false;
+            if (currentFilter === 'anime' && !line.includes('User opened anime')) return false;
+            if (query && !line.toLowerCase().includes(query)) return false;
+            return true;
+        });
+
+        logCount.textContent = '(' + filtered.length + ' entries)';
+
+        if (filtered.length === 0) {
+            logList.innerHTML = '<div class="empty-state">No log entries found.</div>';
+            return;
+        }
+
+        logList.innerHTML = filtered.map(function (line) {
+            const p = parseLog(line);
+            if (p.type === 'visit') {
+                return `<div class="log-entry type-visit">
+                    <span class="badge">Visit</span>
+                    <span class="log-text">
+                        <span class="time">${escHtml(p.time)}</span>
+                        &nbsp;—&nbsp;
+                        <span class="location">${escHtml(p.location)}</span>
+                        &nbsp;<span class="session">(${escHtml(p.session)})</span>
+                    </span>
+                </div>`;
+            } else if (p.type === 'anime') {
+                return `<div class="log-entry type-anime">
+                    <span class="badge">Anime</span>
+                    <span class="log-text">
+                        <span class="time">${escHtml(p.time)}</span>
+                        &nbsp;—&nbsp;
+                        <span class="anime-name">${escHtml(p.animeName)}</span>
+                        &nbsp;<span class="session">(${escHtml(p.session)})</span>
+                    </span>
+                </div>`;
+            }
+            return `<div class="log-entry"><span class="log-text">${escHtml(line)}</span></div>`;
+        }).join('');
+    }
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+</script>
+</body>
+</html>
