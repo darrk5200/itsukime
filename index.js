@@ -88,6 +88,39 @@
                 let botRestartTimers = new Map();
                 let latestAnimeEntries = []; // Store the latest anime entries
 
+                // ============================================
+                // ANALYTICS LOG STORE
+                // ============================================
+                const MAX_LOG_ENTRIES = 10000;
+                const analyticsLogs = [];
+
+                function gmt8TimeString() {
+                    return new Date().toLocaleString('en-GB', {
+                        timeZone: 'Asia/Singapore',
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit',
+                        hour12: false
+                    }) + ' GMT+08';
+                }
+
+                function pushLog(entry) {
+                    analyticsLogs.push(entry);
+                    if (analyticsLogs.length > MAX_LOG_ENTRIES) analyticsLogs.shift();
+                }
+
+                async function getLocationFromIP(ip) {
+                    try {
+                        const cleanIp = ip === '::1' || ip === '127.0.0.1' ? '' : ip;
+                        if (!cleanIp) return 'localhost';
+                        const res = await fetch(`http://ip-api.com/json/${cleanIp}?fields=status,country,city`);
+                        const data = await res.json();
+                        if (data.status === 'success') {
+                            return [data.city, data.country].filter(Boolean).join(', ') || 'Unknown';
+                        }
+                    } catch (_) {}
+                    return 'Unknown';
+                }
+
                 // Cache distribution tracking
                 let cacheDistribution = new Map();
 
@@ -1922,6 +1955,37 @@
                         metadata: metadata,
                         tmdbShowInfo: tmdbShowInfo
                     });
+                });
+
+                // ============================================
+                // ANALYTICS ROUTES
+                // ============================================
+
+                app.post("/api/log/visit", async (req, res) => {
+                    const { sessionId } = req.body || {};
+                    if (!sessionId) return res.status(400).json({ error: "Missing sessionId" });
+                    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+                    const location = await getLocationFromIP(ip);
+                    const entry = `(${gmt8TimeString()}) User loaded site from ${location} (${sessionId})`;
+                    pushLog(entry);
+                    res.json({ ok: true });
+                });
+
+                app.post("/api/log/anime", (req, res) => {
+                    const { sessionId, animeName } = req.body || {};
+                    if (!sessionId || !animeName) return res.status(400).json({ error: "Missing fields" });
+                    const entry = `(${gmt8TimeString()}) User opened anime ${animeName} (${sessionId})`;
+                    pushLog(entry);
+                    res.json({ ok: true });
+                });
+
+                app.get("/api/admin/logs", (req, res) => {
+                    const code = req.query.code || '';
+                    const adminCode = process.env.ADMIN_CODE;
+                    if (!adminCode || code !== adminCode) {
+                        return res.status(403).json({ error: "Invalid access code" });
+                    }
+                    res.json({ logs: [...analyticsLogs].reverse() });
                 });
 
                 // ============================================
