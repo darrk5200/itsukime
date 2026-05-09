@@ -75,6 +75,16 @@
                 app.set("view engine", "ejs");
                 app.set("views", path.join(__dirname, "views"));
 
+                // Ban middleware — runs before all routes (admin API always bypasses)
+                app.use((req, res, next) => {
+                    if (req.path.startsWith('/api/admin/') || req.path.startsWith('/api/check-status')) return next();
+                    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+                    if (bannedIPs.has(ip)) {
+                        return res.status(403).send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Banned</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{background:#0a0a0a;color:#fff;font-family:'Inter','Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;}.msg{text-align:center;padding:2rem;}.msg h1{font-size:3rem;margin-bottom:1rem;}.msg h2{font-size:1.4rem;font-weight:600;color:#e81c1c;}</style></head><body><div class="msg"><h1>🚫</h1><h2>Uh oh, you've been banned</h2></div></body></html>`);
+                    }
+                    next();
+                });
+
                 // ============================================
                 // MULTI-BOT DISCORD SETUP
                 // ============================================
@@ -107,6 +117,12 @@
                     analyticsLogs.push(entry);
                     if (analyticsLogs.length > MAX_LOG_ENTRIES) analyticsLogs.shift();
                 }
+
+                // ============================================
+                // BAN / WARNING STORE
+                // ============================================
+                const bannedIPs = new Set();
+                const warnedIPs = new Set();
 
                 async function getLocationFromIP(ip) {
                     try {
@@ -1961,12 +1977,17 @@
                 // ANALYTICS ROUTES
                 // ============================================
 
+                app.get("/api/check-status", (req, res) => {
+                    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+                    res.json({ banned: bannedIPs.has(ip), warned: warnedIPs.has(ip) });
+                });
+
                 app.post("/api/log/visit", async (req, res) => {
                     const { sessionId } = req.body || {};
                     if (!sessionId) return res.status(400).json({ error: "Missing sessionId" });
                     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
                     const location = await getLocationFromIP(ip);
-                    const entry = `(${gmt8TimeString()}) User loaded site from ${location} (${sessionId})`;
+                    const entry = `(${gmt8TimeString()}) User loaded site from ${location} [${ip || 'unknown'}] (${sessionId})`;
                     pushLog(entry);
                     res.json({ ok: true });
                 });
@@ -1986,6 +2007,56 @@
                         return res.status(403).json({ error: "Invalid access code" });
                     }
                     res.json({ logs: [...analyticsLogs].reverse() });
+                });
+
+                function requireAdminCode(req, res) {
+                    const code = req.body?.code || req.query.code || '';
+                    const adminCode = process.env.ADMIN_CODE;
+                    if (!adminCode || code !== adminCode) {
+                        res.status(403).json({ error: "Invalid access code" });
+                        return false;
+                    }
+                    return true;
+                }
+
+                app.post("/api/admin/ban", (req, res) => {
+                    if (!requireAdminCode(req, res)) return;
+                    const { ip } = req.body || {};
+                    if (!ip) return res.status(400).json({ error: "Missing ip" });
+                    bannedIPs.add(ip);
+                    warnedIPs.delete(ip);
+                    console.log(`🚫 Banned IP: ${ip}`);
+                    res.json({ ok: true, banned: ip });
+                });
+
+                app.post("/api/admin/unban", (req, res) => {
+                    if (!requireAdminCode(req, res)) return;
+                    const { ip } = req.body || {};
+                    if (!ip) return res.status(400).json({ error: "Missing ip" });
+                    bannedIPs.delete(ip);
+                    res.json({ ok: true, unbanned: ip });
+                });
+
+                app.post("/api/admin/warn", (req, res) => {
+                    if (!requireAdminCode(req, res)) return;
+                    const { ip } = req.body || {};
+                    if (!ip) return res.status(400).json({ error: "Missing ip" });
+                    warnedIPs.add(ip);
+                    console.log(`⚠️ Warned IP: ${ip}`);
+                    res.json({ ok: true, warned: ip });
+                });
+
+                app.post("/api/admin/unwarn", (req, res) => {
+                    if (!requireAdminCode(req, res)) return;
+                    const { ip } = req.body || {};
+                    if (!ip) return res.status(400).json({ error: "Missing ip" });
+                    warnedIPs.delete(ip);
+                    res.json({ ok: true, unwarned: ip });
+                });
+
+                app.get("/api/admin/lists", (req, res) => {
+                    if (!requireAdminCode(req, res)) return;
+                    res.json({ banned: [...bannedIPs], warned: [...warnedIPs] });
                 });
 
                 // ============================================
