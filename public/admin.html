@@ -505,7 +505,7 @@
     <div class="shell-section">
         <div class="shell-title"><span class="shell-dot"></span> Command Shell</div>
         <div class="shell-output" id="shellOutput">
-            <div class="shell-line out-info">Type a command</div>
+            <div class="shell-line out-info">Commands: !ban &lt;ip&gt;, !unban &lt;ip&gt;, !warning &lt;ip&gt;, !unwarn &lt;ip&gt;, !banuser &lt;id&gt;, !unbanuser &lt;id&gt;, !warnuser &lt;id&gt;, !unwarnuser &lt;id&gt;, !list</div>
         </div>
         <div class="shell-input-row">
             <span class="shell-prompt">$</span>
@@ -668,25 +668,26 @@
         logList.innerHTML = filtered.map(function (line) {
             const p = parseLog(line);
             if (p.type === 'visit') {
-                const ipTag = p.ip ? `<span class="ip-tag" title="Click to use in shell" onclick="shellUseIp('${escHtml(p.ip)}')">${escHtml(p.ip)}</span>` : '';
+                const ipTag = p.ip ? `<span class="ip-tag" title="Click to ban IP" onclick="shellUseIp('${escHtml(p.ip)}')">${escHtml(p.ip)}</span>` : '';
+                const userTag = p.session ? `<span class="ip-tag" style="background:rgba(139,0,200,0.12);color:#c87fff;border-color:rgba(139,0,200,0.25)" title="Click to ban UserID" onclick="shellUseUser('${escHtml(p.session)}')">${escHtml(p.session)}</span>` : '';
                 return `<div class="log-entry type-visit">
                     <span class="badge">Visit</span>
                     <span class="log-text">
                         <span class="time">${escHtml(p.time)}</span>
                         &nbsp;—&nbsp;
                         <span class="location">${escHtml(p.location)}</span>
-                        ${ipTag}
-                        &nbsp;<span class="session">(${escHtml(p.session)})</span>
+                        ${ipTag}${userTag}
                     </span>
                 </div>`;
             } else if (p.type === 'anime') {
+                const userTag = p.session ? `<span class="ip-tag" style="background:rgba(139,0,200,0.12);color:#c87fff;border-color:rgba(139,0,200,0.25)" title="Click to ban UserID" onclick="shellUseUser('${escHtml(p.session)}')">${escHtml(p.session)}</span>` : '';
                 return `<div class="log-entry type-anime">
                     <span class="badge">Anime</span>
                     <span class="log-text">
                         <span class="time">${escHtml(p.time)}</span>
                         &nbsp;—&nbsp;
                         <span class="anime-name">${escHtml(p.animeName)}</span>
-                        &nbsp;<span class="session">(${escHtml(p.session)})</span>
+                        &nbsp;${userTag}
                     </span>
                 </div>`;
             }
@@ -705,6 +706,11 @@
 
     function shellUseIp(ip) {
         shellInput.value = '!ban ' + ip;
+        shellInput.focus();
+    }
+
+    function shellUseUser(uid) {
+        shellInput.value = '!banuser ' + uid;
         shellInput.focus();
     }
 
@@ -771,20 +777,62 @@
                 else shellPrint('Error: ' + (d.error || 'unknown'), 'out-error');
             } catch (e) { shellPrint('Request failed.', 'out-error'); }
 
+        } else if (cmd === '!banuser') {
+            if (!arg) { shellPrint('Usage: !banuser <userid>', 'out-error'); return; }
+            try {
+                const r = await fetch('/api/admin/banuser', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: accessCode, userId: arg }) });
+                const d = await r.json();
+                if (d.ok) shellPrint('Banned UserID ' + arg + '. They will see the ban page on next load (even on VPN).', 'out-success');
+                else shellPrint('Error: ' + (d.error || 'unknown'), 'out-error');
+            } catch (e) { shellPrint('Request failed.', 'out-error'); }
+
+        } else if (cmd === '!unbanuser') {
+            if (!arg) { shellPrint('Usage: !unbanuser <userid>', 'out-error'); return; }
+            try {
+                const r = await fetch('/api/admin/unbanuser', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: accessCode, userId: arg }) });
+                const d = await r.json();
+                if (d.ok) shellPrint('Unbanned UserID ' + arg + '.', 'out-success');
+                else shellPrint('Error: ' + (d.error || 'unknown'), 'out-error');
+            } catch (e) { shellPrint('Request failed.', 'out-error'); }
+
+        } else if (cmd === '!warnuser') {
+            if (!arg) { shellPrint('Usage: !warnuser <userid>', 'out-error'); return; }
+            try {
+                const r = await fetch('/api/admin/warnuser', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: accessCode, userId: arg }) });
+                const d = await r.json();
+                if (d.ok) shellPrint('Warning issued to UserID ' + arg + '.', 'out-warn');
+                else shellPrint('Error: ' + (d.error || 'unknown'), 'out-error');
+            } catch (e) { shellPrint('Request failed.', 'out-error'); }
+
+        } else if (cmd === '!unwarnuser') {
+            if (!arg) { shellPrint('Usage: !unwarnuser <userid>', 'out-error'); return; }
+            try {
+                const r = await fetch('/api/admin/unwarnuser', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: accessCode, userId: arg }) });
+                const d = await r.json();
+                if (d.ok) shellPrint('Warning removed from UserID ' + arg + '.', 'out-success');
+                else shellPrint('Error: ' + (d.error || 'unknown'), 'out-error');
+            } catch (e) { shellPrint('Request failed.', 'out-error'); }
+
         } else if (cmd === '!list') {
             try {
                 const r = await fetch('/api/admin/lists?code=' + encodeURIComponent(accessCode));
                 const d = await r.json();
-                shellPrint('Banned IPs (' + (d.banned || []).length + '):', 'out-info');
+                shellPrint('── IP Bans (' + (d.banned || []).length + ') ──', 'out-info');
                 (d.banned || []).forEach(ip => shellPrint('  ' + ip, 'out-list'));
                 if (!(d.banned || []).length) shellPrint('  (none)', 'out-list');
-                shellPrint('Warned IPs (' + (d.warned || []).length + '):', 'out-warn');
+                shellPrint('── IP Warnings (' + (d.warned || []).length + ') ──', 'out-warn');
                 (d.warned || []).forEach(ip => shellPrint('  ' + ip, 'out-list'));
                 if (!(d.warned || []).length) shellPrint('  (none)', 'out-list');
+                shellPrint('── User Bans (' + (d.bannedUsers || []).length + ') ──', 'out-info');
+                (d.bannedUsers || []).forEach(uid => shellPrint('  ' + uid, 'out-list'));
+                if (!(d.bannedUsers || []).length) shellPrint('  (none)', 'out-list');
+                shellPrint('── User Warnings (' + (d.warnedUsers || []).length + ') ──', 'out-warn');
+                (d.warnedUsers || []).forEach(uid => shellPrint('  ' + uid, 'out-list'));
+                if (!(d.warnedUsers || []).length) shellPrint('  (none)', 'out-list');
             } catch (e) { shellPrint('Request failed.', 'out-error'); }
 
         } else {
-            shellPrint('Unknown command. Try: !ban <ip>, !unban <ip>, !warning <ip>, !unwarn <ip>, !list', 'out-error');
+            shellPrint('Unknown command. Try: !ban/!unban/!warning/!unwarn <ip> or !banuser/!unbanuser/!warnuser/!unwarnuser <id> or !list', 'out-error');
         }
     });
 </script>
