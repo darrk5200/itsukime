@@ -80,7 +80,7 @@
                     if (req.path.startsWith('/api/admin/') || req.path.startsWith('/api/check-status')) return next();
                     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
                     if (bannedIPs.has(ip)) {
-                        return res.status(403).send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Banned</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{background:#0a0a0a;color:#fff;font-family:'Inter','Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;}.msg{text-align:center;padding:2rem;}.msg h1{font-size:3rem;margin-bottom:1rem;}.msg h2{font-size:1.4rem;font-weight:600;color:#e81c1c;}</style></head><body><div class="msg"><h1>🚫</h1><h2>Uh oh, you've been banned</h2></div></body></html>`);
+                        return res.status(403).send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Banned</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{background:#0a0a0a;color:#fff;font-family:'Inter','Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;}.msg{text-align:center;padding:2rem;}.msg img{width:180px;height:180px;object-fit:contain;margin-bottom:1rem;}.msg h2{font-size:1.4rem;font-weight:600;color:#e81c1c;}</style></head><body><div class="msg"><img src="https://raw.githubusercontent.com/darrk5200/itsukime/refs/heads/main/public/ban.webp" alt="Banned" /><h2>Uh oh, you've been banned</h2></div></body></html>`);
                     }
                     next();
                 });
@@ -123,6 +123,8 @@
                 // ============================================
                 const bannedIPs = new Set();
                 const warnedIPs = new Set();
+                const bannedUserIDs = new Set();
+                const warnedUserIDs = new Set();
 
                 async function getLocationFromIP(ip) {
                     try {
@@ -1979,23 +1981,26 @@
 
                 app.get("/api/check-status", (req, res) => {
                     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
-                    res.json({ banned: bannedIPs.has(ip), warned: warnedIPs.has(ip) });
+                    const userId = req.query.userId || '';
+                    const banned = bannedIPs.has(ip) || (userId && bannedUserIDs.has(userId));
+                    const warned = !banned && (warnedIPs.has(ip) || (userId && warnedUserIDs.has(userId)));
+                    res.json({ banned, warned });
                 });
 
                 app.post("/api/log/visit", async (req, res) => {
-                    const { sessionId } = req.body || {};
-                    if (!sessionId) return res.status(400).json({ error: "Missing sessionId" });
+                    const { userId } = req.body || {};
+                    if (!userId) return res.status(400).json({ error: "Missing userId" });
                     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
                     const location = await getLocationFromIP(ip);
-                    const entry = `(${gmt8TimeString()}) User loaded site from ${location} [${ip || 'unknown'}] (${sessionId})`;
+                    const entry = `(${gmt8TimeString()}) User loaded site from ${location} [${ip || 'unknown'}] (${userId})`;
                     pushLog(entry);
                     res.json({ ok: true });
                 });
 
                 app.post("/api/log/anime", (req, res) => {
-                    const { sessionId, animeName } = req.body || {};
-                    if (!sessionId || !animeName) return res.status(400).json({ error: "Missing fields" });
-                    const entry = `(${gmt8TimeString()}) User opened anime ${animeName} (${sessionId})`;
+                    const { userId, animeName } = req.body || {};
+                    if (!userId || !animeName) return res.status(400).json({ error: "Missing fields" });
+                    const entry = `(${gmt8TimeString()}) User opened anime ${animeName} (${userId})`;
                     pushLog(entry);
                     res.json({ ok: true });
                 });
@@ -2029,6 +2034,41 @@
                     res.json({ ok: true, banned: ip });
                 });
 
+                app.post("/api/admin/banuser", (req, res) => {
+                    if (!requireAdminCode(req, res)) return;
+                    const { userId } = req.body || {};
+                    if (!userId) return res.status(400).json({ error: "Missing userId" });
+                    bannedUserIDs.add(userId);
+                    warnedUserIDs.delete(userId);
+                    console.log(`🚫 Banned UserID: ${userId}`);
+                    res.json({ ok: true, banned: userId });
+                });
+
+                app.post("/api/admin/unbanuser", (req, res) => {
+                    if (!requireAdminCode(req, res)) return;
+                    const { userId } = req.body || {};
+                    if (!userId) return res.status(400).json({ error: "Missing userId" });
+                    bannedUserIDs.delete(userId);
+                    res.json({ ok: true, unbanned: userId });
+                });
+
+                app.post("/api/admin/warnuser", (req, res) => {
+                    if (!requireAdminCode(req, res)) return;
+                    const { userId } = req.body || {};
+                    if (!userId) return res.status(400).json({ error: "Missing userId" });
+                    warnedUserIDs.add(userId);
+                    console.log(`⚠️ Warned UserID: ${userId}`);
+                    res.json({ ok: true, warned: userId });
+                });
+
+                app.post("/api/admin/unwarnuser", (req, res) => {
+                    if (!requireAdminCode(req, res)) return;
+                    const { userId } = req.body || {};
+                    if (!userId) return res.status(400).json({ error: "Missing userId" });
+                    warnedUserIDs.delete(userId);
+                    res.json({ ok: true, unwarned: userId });
+                });
+
                 app.post("/api/admin/unban", (req, res) => {
                     if (!requireAdminCode(req, res)) return;
                     const { ip } = req.body || {};
@@ -2056,7 +2096,7 @@
 
                 app.get("/api/admin/lists", (req, res) => {
                     if (!requireAdminCode(req, res)) return;
-                    res.json({ banned: [...bannedIPs], warned: [...warnedIPs] });
+                    res.json({ banned: [...bannedIPs], warned: [...warnedIPs], bannedUsers: [...bannedUserIDs], warnedUsers: [...warnedUserIDs] });
                 });
 
                 // ============================================
