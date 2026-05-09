@@ -2606,8 +2606,20 @@
                     </div>
                     <script>
                         (function() {
-                            fetch('/api/check-status').then(function(r){ return r.json(); }).then(function(d){
-                                if (d.warned) {
+                            function _genUserId() {
+                                var s = '';
+                                for (var i = 0; i < 16; i++) s += Math.floor(Math.random()*16).toString(16);
+                                return s;
+                            }
+                            var _uid = localStorage.getItem('itsukime_userid');
+                            if (!_uid) { _uid = _genUserId(); localStorage.setItem('itsukime_userid', _uid); }
+                            window._itsukimeUserId = _uid;
+
+                            fetch('/api/check-status?userId=' + encodeURIComponent(_uid)).then(function(r){ return r.json(); }).then(function(d){
+                                if (d.banned) {
+                                    document.body.style.cssText = 'margin:0;padding:0;background:#0a0a0a;color:#fff;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;';
+                                    document.body.innerHTML = '<div style="text-align:center;padding:2rem"><img src="https://raw.githubusercontent.com/darrk5200/itsukime/refs/heads/main/public/ban.webp" style="width:180px;height:180px;object-fit:contain;margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto" alt="Banned" /><h2 style="font-size:1.4rem;font-weight:600;color:#e81c1c;margin:0">Uh oh, you\'ve been banned</h2></div>';
+                                } else if (d.warned) {
                                     var b = document.getElementById('itsWarningBanner');
                                     if (b) b.style.display = 'block';
                                 }
@@ -5312,26 +5324,14 @@
 
                     <script>
                         (function () {
-                            function generateSessionId() {
-                                return 'xxxx-xxxx-xxxx'.replace(/x/g, function () {
-                                    return Math.floor(Math.random() * 16).toString(16);
-                                });
-                            }
-
-                            let _sessionId = sessionStorage.getItem('itsukime_session');
-                            if (!_sessionId) {
-                                _sessionId = generateSessionId();
-                                sessionStorage.setItem('itsukime_session', _sessionId);
-                            }
-                            window._itsukimeSession = _sessionId;
+                            const _userId = window._itsukimeUserId || localStorage.getItem('itsukime_userid');
 
                             fetch('/api/log/visit', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ sessionId: _sessionId })
+                                body: JSON.stringify({ userId: _userId })
                             }).catch(function () {});
 
-                            const _origShowAnimeDetail = window.showAnimeDetail || null;
                             const _patchAnimeTracking = function () {
                                 if (typeof showAnimeDetail === 'function' && !showAnimeDetail._tracked) {
                                     const _orig = showAnimeDetail;
@@ -5340,7 +5340,7 @@
                                         fetch('/api/log/anime', {
                                             method: 'POST',
                                             headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ sessionId: window._itsukimeSession, animeName: name })
+                                            body: JSON.stringify({ userId: window._itsukimeUserId, animeName: name })
                                         }).catch(function () {});
                                         return _orig.apply(this, arguments);
                                     };
