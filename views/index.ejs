@@ -2601,6 +2601,19 @@
                     </style>
                 </head>
                 <body>
+                    <div id="itsWarningBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#7a4500;color:#fff;font-family:'Inter','Segoe UI',sans-serif;font-size:0.9rem;padding:0.75rem 1.5rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.5);">
+                        ⚠️ Please stop spamming the site
+                    </div>
+                    <script>
+                        (function() {
+                            fetch('/api/check-status').then(function(r){ return r.json(); }).then(function(d){
+                                if (d.warned) {
+                                    var b = document.getElementById('itsWarningBanner');
+                                    if (b) b.style.display = 'block';
+                                }
+                            }).catch(function(){});
+                        })();
+                    </script>
                     <div id="pageBlocker" style="position:fixed;inset:0;background:var(--bg-primary);z-index:9997;pointer-events:none;"></div>
                     <div class="container">
                         <div class="header">
