@@ -177,7 +177,34 @@
                     "Demon Slayer: Kimetsu no Yaiba - Mugen Train ### Demon Slayer: Kimetsu no Yaiba EP27",
                     "Demon Slayer: Kimetsu no Yaiba - Entertainment District Arc ### Demon Slayer: Kimetsu no Yaiba EP34",
                     "Demon Slayer: Kimetsu no Yaiba - Swordsmith Village Arc ### Demon Slayer: Kimetsu no Yaiba EP45",
-                    "Demon Slayer: Kimetsu no Yaiba - Hashira Training Arc ### Demon Slayer: Kimetsu no Yaiba EP56"
+                    "Demon Slayer: Kimetsu no Yaiba - Hashira Training Arc ### Demon Slayer: Kimetsu no Yaiba EP56",
+                    // Dr. Stone seasons
+                    "Dr. Stone: Stone Wars ### Dr. Stone EP25",
+                    "Dr.Stone: Stone Wars ### Dr. Stone EP25",
+                    "Dr. Stone: New World ### Dr. Stone EP36",
+                    "Dr.Stone: New World ### Dr. Stone EP36",
+                    "Dr. Stone: New World Part 2 ### Dr. Stone EP47",
+                    "Dr. Stone: New World - Part 2 ### Dr. Stone EP47",
+                    "Dr.Stone: New World Part 2 ### Dr. Stone EP47",
+                    "Dr.Stone New World Part 2 ### Dr. Stone EP47",
+                    "Dr. Stone: Science Future ### Dr. Stone EP58",
+                    "Dr.Stone: Science Future ### Dr. Stone EP58",
+                    "Dr. Stone: Science Future Part 1 ### Dr. Stone EP58",
+                    "Dr. Stone: Science Future - Part I ### Dr. Stone EP58",
+                    "Dr. Stone: Science Future - Part 1 ### Dr. Stone EP58",
+                    "Dr. Stone: Science Future Part 2 ### Dr. Stone EP68",
+                    "Dr. Stone: Science Future - Part II ### Dr. Stone EP68",
+                    "Dr. Stone: Science Future - Part 2 ### Dr. Stone EP68",
+                    "Dr. Stone: Science Future Part 3 ### Dr. Stone EP78",
+                    "Dr. Stone: Science Future - Part III ### Dr. Stone EP78",
+                    "Dr. Stone: Science Future - Part 3 ### Dr. Stone EP78",
+                    // The Daily Life of the Immortal King seasons
+                    "The Daily Life of the Immortal King 2 ### The Daily Life of the Immortal King EP17",
+                    "The Daily Life of the Immortal King Season 2 ### The Daily Life of the Immortal King EP17",
+                    "The Daily Life of the Immortal King 3 ### The Daily Life of the Immortal King EP33",
+                    "The Daily Life of the Immortal King Season 3 ### The Daily Life of the Immortal King EP33",
+                    "The Daily Life of the Immortal King 4 ### The Daily Life of the Immortal King EP49",
+                    "The Daily Life of the Immortal King Season 4 ### The Daily Life of the Immortal King EP49"
                 ];
 
                 function getAutomaticOffset(animeName) {
