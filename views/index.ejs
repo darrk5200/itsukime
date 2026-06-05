@@ -595,6 +595,14 @@
 
                         .detail-info {
                             flex: 1;
+                            border-radius: 10px;
+                            padding: 1.1rem 1.25rem;
+                            background-color: var(--bg-card);
+                            background-size: cover;
+                            background-position: center;
+                            background-repeat: no-repeat;
+                            transition: background-image 0.5s ease;
+                            overflow: hidden;
                         }
 
                         .detail-title {
@@ -2817,7 +2825,7 @@
                                         🔖
                                     </button>
                                     <img src="" alt="" class="detail-image" id="detailImage">
-                                    <div class="detail-info">
+                                    <div class="detail-info" id="detailInfoBox">
                                         <h2 class="detail-title" id="detailTitle"></h2>
                                         <div class="synopsis-genres" id="synopsisGenres"></div>
                                         <div class="detail-meta" id="detailMeta"></div>
@@ -4110,6 +4118,21 @@
                             const detailMetaEl = document.getElementById('detailMeta');
                             synopsisGenres.innerHTML = '';
                             detailMetaEl.innerHTML = '';
+
+                            // Apply TMDB backdrop to the stats container
+                            const detailInfoEl = document.getElementById('detailInfoBox');
+                            if (detailInfoEl) {
+                                const backdropUrl = currentTmdbShowInfo?.backdropUrl;
+                                if (backdropUrl) {
+                                    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                                    const overlay = isLight
+                                        ? 'linear-gradient(to right, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0.15) 100%)'
+                                        : 'linear-gradient(to right, rgba(10,10,10,0.96) 0%, rgba(10,10,10,0.82) 55%, rgba(10,10,10,0.5) 100%)';
+                                    detailInfoEl.style.backgroundImage = `${overlay}, url('${backdropUrl}')`;
+                                } else {
+                                    detailInfoEl.style.backgroundImage = '';
+                                }
+                            }
 
                             const displayGenres = validGenres.length > 0 ? validGenres :
                                 (currentTmdbShowInfo?.genres || []);
