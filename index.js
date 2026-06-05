@@ -422,7 +422,8 @@
                                     numberOfEpisodes: showData.number_of_episodes,
                                     networks: (showData.networks || []).map(n => n.name).filter(Boolean),
                                     type: showData.type || null,
-                                    originalLanguage: showData.original_language || null
+                                    originalLanguage: showData.original_language || null,
+                                    backdropUrl: showData.backdrop_path ? `https://image.tmdb.org/t/p/w1280${showData.backdrop_path}` : null
                                 };
 
                                 const result = { episodes: Object.keys(episodeMap).length > 0 ? episodeMap : null, showInfo };
@@ -492,7 +493,8 @@
                                     numberOfEpisodes: showData.number_of_episodes,
                                     networks: (showData.networks || []).map(n => n.name).filter(Boolean),
                                     type: showData.type || null,
-                                    originalLanguage: showData.original_language || null
+                                    originalLanguage: showData.original_language || null,
+                                    backdropUrl: showData.backdrop_path ? `https://image.tmdb.org/t/p/w1280${showData.backdrop_path}` : null
                                 };
 
                                 const result = { episodes: Object.keys(episodeMap).length > 0 ? episodeMap : null, showInfo };
@@ -617,7 +619,8 @@
                             numberOfEpisodes: showData.number_of_episodes,
                             networks: (showData.networks || []).map(n => n.name).filter(Boolean),
                             type: showData.type || null,
-                            originalLanguage: showData.original_language || null
+                            originalLanguage: showData.original_language || null,
+                            backdropUrl: showData.backdrop_path ? `https://image.tmdb.org/t/p/w1280${showData.backdrop_path}` : null
                         };
 
                         const result = {
