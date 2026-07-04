@@ -9,7 +9,7 @@
                 require("dotenv").config();
 
                 // ============================================
-                // CONFIGURATION FR
+                // CONFIGURATION
                 // ============================================
 
                 // Multiple bot configuration for parallel caching
@@ -39,8 +39,8 @@
 
                 const DISCORD_RESTART_INTERVAL = 5 * 60 * 60 * 1000; // 3 hours in milliseconds
                 const LATEST_ANIME_COUNT = 3; // Number of latest anime to show at the top
-                const CHANNEL_CONCURRENCY = 1;  // Reduced to 1 to avoid Discord rate limiting  // Concurrent REST channel fetches per bot (keep low to avoid rate limit thundering herd)
-                const REST_PAGE_DELAY_MS = 500; // Increased to reduce Discord API pressure // Delay between paginated requests within a single channel
+                const CHANNEL_CONCURRENCY = 3;  // Concurrent REST channel fetches per bot (keep low to avoid rate limit thundering herd)
+                const REST_PAGE_DELAY_MS = 100; // Delay between paginated requests within a single channel
                 const BOT_BATCH_SIZE = parseInt(process.env.BOT_BATCH_SIZE) || 2; // Bots processed simultaneously during init/fetch
 
                 // Run async tasks in sequential batches of batchSize, collecting all results
@@ -150,79 +150,6 @@
                 const TMDB_API_KEY = process.env.TMDB_API_KEY;
                 const TMDB_BASE = 'https://api.themoviedb.org/3';
                 const TMDB_IMG = 'https://image.tmdb.org/t/p/w300';
-
-                // TMDB rate limiting and retry logic
-                const TMDB_REQUEST_DELAY_MS = 250; // 250ms between requests (4 req/sec max)
-                const TMDB_TIMEOUT_MS = 10000; // 10 second timeout per request
-                const TMDB_MAX_RETRIES = 3;
-                let lastTMDBRequestTime = 0;
-
-                async function fetchWithTimeout(url, timeoutMs = TMDB_TIMEOUT_MS) {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-                    try {
-                        const response = await fetch(url, { signal: controller.signal });
-                        clearTimeout(timeoutId);
-                        return response;
-                    } catch (err) {
-                        clearTimeout(timeoutId);
-                        throw err;
-                    }
-                }
-
-                async function throttledTMDBFetch(url) {
-                    const now = Date.now();
-                    const timeSinceLastRequest = now - lastTMDBRequestTime;
-                    if (timeSinceLastRequest < TMDB_REQUEST_DELAY_MS) {
-                        await new Promise(r => setTimeout(r, TMDB_REQUEST_DELAY_MS - timeSinceLastRequest));
-                    }
-                    lastTMDBRequestTime = Date.now();
-                    return fetchWithTimeout(url);
-                }
-                // Discord API rate limiting
-                const DISCORD_REQUEST_DELAY_MS = 1000; // 1 second between requests (1 req/sec max globally) // 500ms between requests (2 req/sec max globally)
-                const DISCORD_TIMEOUT_MS = 15000; // 15 second timeout for Discord API
-                let lastDiscordRequestTime = 0;
-                let discordRateLimitUntil = 0;
-
-                async function throttledDiscordFetch(url, options = {}) {
-                    // Check if we're rate limited
-                    const now = Date.now();
-                    if (now < discordRateLimitUntil) {
-                        const waitTime = discordRateLimitUntil - now;
-                        console.log(`⏳ Discord rate limited, waiting ${waitTime}ms...`);
-                        await new Promise(r => setTimeout(r, waitTime));
-                    }
-
-                    // Apply global throttling
-                    const timeSinceLastRequest = Date.now() - lastDiscordRequestTime;
-                    if (timeSinceLastRequest < DISCORD_REQUEST_DELAY_MS) {
-                        await new Promise(r => setTimeout(r, DISCORD_REQUEST_DELAY_MS - timeSinceLastRequest));
-                    }
-                    lastDiscordRequestTime = Date.now();
-                    
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), DISCORD_TIMEOUT_MS);
-                    try {
-                        const response = await fetch(url, { ...options, signal: controller.signal });
-                        clearTimeout(timeoutId);
-                        
-                        // Handle rate limiting
-                        if (response.status === 429) {
-                            try {
-                                const body = await response.json();
-                                const retryAfter = (body.retry_after || 1) * 1000;
-                                discordRateLimitUntil = Date.now() + retryAfter;
-                                console.warn(`⚠️ Discord 429: rate limited for ${retryAfter}ms`);
-                            } catch {}
-                        }
-                        
-                        return response;
-                    } catch (err) {
-                        clearTimeout(timeoutId);
-                        throw err;
-                    }
-                }
 
                 // Manual episode offset overrides
                 // Format: "Anime Name ### TMDB Show Name EP{start_episode}"
@@ -412,6 +339,22 @@
                     return best || results[0];
                 }
 
+                // Fetch wrapper with retry for transient network errors (e.g. "Premature close")
+                async function tmdbFetch(url, opts) {
+                    const MAX_RETRIES = 5;
+                    let attempt = 0;
+                    while (true) {
+                        try {
+                            return await fetch(url, opts);
+                        } catch (err) {
+                            attempt++;
+                            if (attempt > MAX_RETRIES) throw err;
+                            const backoff = Math.min(1000 * 2 ** (attempt - 1), 30000);
+                            await new Promise(r => setTimeout(r, backoff));
+                        }
+                    }
+                }
+
                 // FIXED: Improved TMDB episode fetching with better season and offset handling
                 async function fetchTMDBEpisodes(animeName) {
                     if (!TMDB_API_KEY) return null;
@@ -423,7 +366,7 @@
                     if (override) {
                         try {
 
-                            const searchRes = await throttledTMDBFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(override.searchName)}`);
+                            const searchRes = await tmdbFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(override.searchName)}`);
                             const searchData = await searchRes.json();
 
                             if (searchData.results && searchData.results.length > 0) {
@@ -431,7 +374,7 @@
                                 const showId = show.id;
 
                                 // Get full show details including all seasons
-                                const showRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
+                                const showRes = await tmdbFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
                                 const showData = await showRes.json();
 
                                 const episodeMap = {};
@@ -452,7 +395,7 @@
                                             targetSeasonFound = true;
 
                                             // Fetch this season's episodes
-                                            const seasonRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}/season/${season.season_number}?api_key=${TMDB_API_KEY}`);
+                                            const seasonRes = await tmdbFetch(`${TMDB_BASE}/tv/${showId}/season/${season.season_number}?api_key=${TMDB_API_KEY}`);
                                             const seasonData = await seasonRes.json();
 
                                             if (seasonData.episodes) {
@@ -514,14 +457,14 @@
                     if (autoOffset) {
                         try {
 
-                            const searchRes = await throttledTMDBFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(autoOffset.searchName)}`);
+                            const searchRes = await tmdbFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(autoOffset.searchName)}`);
                             const searchData = await searchRes.json();
 
                             if (searchData.results && searchData.results.length > 0) {
                                 const show = pickBestTMDBResult(searchData.results, autoOffset.searchName);
                                 const showId = show.id;
 
-                                const showRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
+                                const showRes = await tmdbFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
                                 const showData = await showRes.json();
 
                                 let cumulativeEps = 0;
@@ -537,7 +480,7 @@
                                     }
                                 }
 
-                                const seasonRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}/season/${autoOffset.seasonNum}?api_key=${TMDB_API_KEY}`);
+                                const seasonRes = await tmdbFetch(`${TMDB_BASE}/tv/${showId}/season/${autoOffset.seasonNum}?api_key=${TMDB_API_KEY}`);
                                 const seasonData = await seasonRes.json();
 
                                 const episodeMap = {};
@@ -589,13 +532,13 @@
 
                         // Search for the show
                         let searchData;
-                        const searchRes = await throttledTMDBFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchName)}`);
+                        const searchRes = await tmdbFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchName)}`);
                         searchData = await searchRes.json();
 
                         // Try without colon if first search fails
                         if ((!searchData.results || searchData.results.length === 0) && searchName.includes(':')) {
                             const baseName = searchName.split(':')[0].trim();
-                            const fallbackRes = await throttledTMDBFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(baseName)}`);
+                            const fallbackRes = await tmdbFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(baseName)}`);
                             searchData = await fallbackRes.json();
                         }
 
@@ -609,7 +552,7 @@
                         const showId = show.id;
 
                         // Get full show details including all seasons
-                        const showRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
+                        const showRes = await tmdbFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
                         const showData = await showRes.json();
 
                         // Improved season detection - check for part indicators
@@ -657,7 +600,7 @@
                         }
 
                         // Fetch the target season
-                        const seasonRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}/season/${seasonNum}?api_key=${TMDB_API_KEY}`);
+                        const seasonRes = await tmdbFetch(`${TMDB_BASE}/tv/${showId}/season/${seasonNum}?api_key=${TMDB_API_KEY}`);
                         const seasonData = await seasonRes.json();
 
                         const episodeMap = {};
@@ -746,8 +689,8 @@
                                     genresEnriched++;
                                 }
                             }
-                            if (fetched % 10 === 0) {
-                                await new Promise(r => setTimeout(r, 1000));
+                            if (fetched % 20 === 0) {
+                                await new Promise(r => setTimeout(r, 500));
                             }
                         } catch (err) {}
                     }
@@ -1261,29 +1204,32 @@
                 async function fetchChannelMessagesViaREST(channelId, token) {
                     const messages = [];
                     let lastId = null;
+                    const MAX_NETWORK_RETRIES = 5;
 
                     while (true) {
                         let url = `https://discord.com/api/v9/channels/${channelId}/messages?limit=100`;
                         if (lastId) url += `&before=${lastId}`;
 
                         let res;
-                        let retries = 0;
+                        let networkAttempt = 0;
                         while (true) {
                             try {
-                                res = await throttledDiscordFetch(url, { headers: { 'Authorization': token } });
-                                if (res.status === 429) {
-                                    let retryAfter = 1;
-                                    try { const body = await res.json(); retryAfter = body.retry_after || 1; } catch {}
-                                    await new Promise(r => setTimeout(r, retryAfter * 1000));
-                                    continue;
-                                }
-                                break;
-                            } catch (err) {
-                                retries++;
-                                if (retries >= 3) throw err;
-                                console.warn(`⚠️ Discord fetch error (retry ${retries}/3): ${err.message}`);
-                                await new Promise(r => setTimeout(r, 2000 * retries)); // exponential backoff
+                                res = await fetch(url, { headers: { 'Authorization': token } });
+                            } catch (networkErr) {
+                                // Retry transient network errors (e.g. "Premature close") with backoff
+                                networkAttempt++;
+                                if (networkAttempt > MAX_NETWORK_RETRIES) throw networkErr;
+                                const backoff = Math.min(1000 * 2 ** (networkAttempt - 1), 30000);
+                                await new Promise(r => setTimeout(r, backoff));
+                                continue;
                             }
+                            if (res.status === 429) {
+                                let retryAfter = 1;
+                                try { const body = await res.json(); retryAfter = body.retry_after || 1; } catch {}
+                                await new Promise(r => setTimeout(r, retryAfter * 1000));
+                                continue;
+                            }
+                            break;
                         }
 
                         if (!res.ok) break;
