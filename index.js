@@ -39,7 +39,7 @@
 
                 const DISCORD_RESTART_INTERVAL = 5 * 60 * 60 * 1000; // 3 hours in milliseconds
                 const LATEST_ANIME_COUNT = 3; // Number of latest anime to show at the top
-                const CHANNEL_CONCURRENCY = 3;  // Concurrent REST channel fetches per bot (keep low to avoid rate limit thundering herd)
+                const CHANNEL_CONCURRENCY = 1;  // Reduced to 1 to avoid Discord rate limiting  // Concurrent REST channel fetches per bot (keep low to avoid rate limit thundering herd)
                 const REST_PAGE_DELAY_MS = 100; // Delay between paginated requests within a single channel
                 const BOT_BATCH_SIZE = parseInt(process.env.BOT_BATCH_SIZE) || 2; // Bots processed simultaneously during init/fetch
 
@@ -178,6 +178,30 @@
                     }
                     lastTMDBRequestTime = Date.now();
                     return fetchWithTimeout(url);
+                }
+                // Discord API rate limiting
+                const DISCORD_REQUEST_DELAY_MS = 100; // 100ms between requests (10 req/sec max per token)
+                const DISCORD_TIMEOUT_MS = 15000; // 15 second timeout for Discord API
+                let lastDiscordRequestTime = 0;
+
+                async function throttledDiscordFetch(url, options = {}) {
+                    const now = Date.now();
+                    const timeSinceLastRequest = now - lastDiscordRequestTime;
+                    if (timeSinceLastRequest < DISCORD_REQUEST_DELAY_MS) {
+                        await new Promise(r => setTimeout(r, DISCORD_REQUEST_DELAY_MS - timeSinceLastRequest));
+                    }
+                    lastDiscordRequestTime = Date.now();
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), DISCORD_TIMEOUT_MS);
+                    try {
+                        const response = await fetch(url, { ...options, signal: controller.signal });
+                        clearTimeout(timeoutId);
+                        return response;
+                    } catch (err) {
+                        clearTimeout(timeoutId);
+                        throw err;
+                    }
                 }
 
                 // Manual episode offset overrides
@@ -1224,7 +1248,7 @@
 
                         let res;
                         while (true) {
-                            res = await fetch(url, { headers: { 'Authorization': token } });
+                            res = await throttledDiscordFetch(url, { headers: { 'Authorization': token } });
                             if (res.status === 429) {
                                 let retryAfter = 1;
                                 try { const body = await res.json(); retryAfter = body.retry_after || 1; } catch {}
