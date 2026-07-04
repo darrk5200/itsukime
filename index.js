@@ -40,7 +40,7 @@
                 const DISCORD_RESTART_INTERVAL = 5 * 60 * 60 * 1000; // 3 hours in milliseconds
                 const LATEST_ANIME_COUNT = 3; // Number of latest anime to show at the top
                 const CHANNEL_CONCURRENCY = 1;  // Reduced to 1 to avoid Discord rate limiting  // Concurrent REST channel fetches per bot (keep low to avoid rate limit thundering herd)
-                const REST_PAGE_DELAY_MS = 100; // Delay between paginated requests within a single channel
+                const REST_PAGE_DELAY_MS = 500; // Increased to reduce Discord API pressure // Delay between paginated requests within a single channel
                 const BOT_BATCH_SIZE = parseInt(process.env.BOT_BATCH_SIZE) || 2; // Bots processed simultaneously during init/fetch
 
                 // Run async tasks in sequential batches of batchSize, collecting all results
@@ -180,13 +180,22 @@
                     return fetchWithTimeout(url);
                 }
                 // Discord API rate limiting
-                const DISCORD_REQUEST_DELAY_MS = 100; // 100ms between requests (10 req/sec max per token)
+                const DISCORD_REQUEST_DELAY_MS = 1000; // 1 second between requests (1 req/sec max globally) // 500ms between requests (2 req/sec max globally)
                 const DISCORD_TIMEOUT_MS = 15000; // 15 second timeout for Discord API
                 let lastDiscordRequestTime = 0;
+                let discordRateLimitUntil = 0;
 
                 async function throttledDiscordFetch(url, options = {}) {
+                    // Check if we're rate limited
                     const now = Date.now();
-                    const timeSinceLastRequest = now - lastDiscordRequestTime;
+                    if (now < discordRateLimitUntil) {
+                        const waitTime = discordRateLimitUntil - now;
+                        console.log(`⏳ Discord rate limited, waiting ${waitTime}ms...`);
+                        await new Promise(r => setTimeout(r, waitTime));
+                    }
+
+                    // Apply global throttling
+                    const timeSinceLastRequest = Date.now() - lastDiscordRequestTime;
                     if (timeSinceLastRequest < DISCORD_REQUEST_DELAY_MS) {
                         await new Promise(r => setTimeout(r, DISCORD_REQUEST_DELAY_MS - timeSinceLastRequest));
                     }
@@ -197,6 +206,17 @@
                     try {
                         const response = await fetch(url, { ...options, signal: controller.signal });
                         clearTimeout(timeoutId);
+                        
+                        // Handle rate limiting
+                        if (response.status === 429) {
+                            try {
+                                const body = await response.json();
+                                const retryAfter = (body.retry_after || 1) * 1000;
+                                discordRateLimitUntil = Date.now() + retryAfter;
+                                console.warn(`⚠️ Discord 429: rate limited for ${retryAfter}ms`);
+                            } catch {}
+                        }
+                        
                         return response;
                     } catch (err) {
                         clearTimeout(timeoutId);
@@ -1247,15 +1267,23 @@
                         if (lastId) url += `&before=${lastId}`;
 
                         let res;
+                        let retries = 0;
                         while (true) {
-                            res = await throttledDiscordFetch(url, { headers: { 'Authorization': token } });
-                            if (res.status === 429) {
-                                let retryAfter = 1;
-                                try { const body = await res.json(); retryAfter = body.retry_after || 1; } catch {}
-                                await new Promise(r => setTimeout(r, retryAfter * 1000));
-                                continue;
+                            try {
+                                res = await throttledDiscordFetch(url, { headers: { 'Authorization': token } });
+                                if (res.status === 429) {
+                                    let retryAfter = 1;
+                                    try { const body = await res.json(); retryAfter = body.retry_after || 1; } catch {}
+                                    await new Promise(r => setTimeout(r, retryAfter * 1000));
+                                    continue;
+                                }
+                                break;
+                            } catch (err) {
+                                retries++;
+                                if (retries >= 3) throw err;
+                                console.warn(`⚠️ Discord fetch error (retry ${retries}/3): ${err.message}`);
+                                await new Promise(r => setTimeout(r, 2000 * retries)); // exponential backoff
                             }
-                            break;
                         }
 
                         if (!res.ok) break;
