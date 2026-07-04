@@ -1,0 +1,160 @@
+--- a/index.js
++++ b/index.js
+@@ -150,6 +150,30 @@ const TMDB_BASE = 'https://api.themoviedb.org/3';
+                 const TMDB_IMG = 'https://image.tmdb.org/t/p/w300';
+ 
++                // TMDB rate limiting and retry logic
++                const TMDB_REQUEST_DELAY_MS = 250; // 250ms between requests (4 req/sec max)
++                const TMDB_TIMEOUT_MS = 10000; // 10 second timeout per request
++                const TMDB_MAX_RETRIES = 3;
++                let lastTMDBRequestTime = 0;
++
++                async function fetchWithTimeout(url, timeoutMs = TMDB_TIMEOUT_MS) {
++                    const controller = new AbortController();
++                    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
++                    try {
++                        const response = await fetch(url, { signal: controller.signal });
++                        clearTimeout(timeoutId);
++                        return response;
++                    } catch (err) {
++                        clearTimeout(timeoutId);
++                        throw err;
++                    }
++                }
++
++                async function throttledTMDBFetch(url) {
++                    const now = Date.now();
++                    const timeSinceLastRequest = now - lastTMDBRequestTime;
++                    if (timeSinceLastRequest < TMDB_REQUEST_DELAY_MS) {
++                        await new Promise(r => setTimeout(r, TMDB_REQUEST_DELAY_MS - timeSinceLastRequest));
++                    }
++                    lastTMDBRequestTime = Date.now();
++                    return fetchWithTimeout(url);
++                }
++
+                 // Manual episode offset overrides
+                 // Format: "Anime Name ### TMDB Show Name EP{start_episode}"
+                 // This tells TMDB to search for "TMDB Show Name" and start from that episode number
+@@ -343,7 +367,7 @@ async function fetchTMDBEpisodes(animeName) {
+                     if (override) {
+                         try {
+ 
+-                            const searchRes = await fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(override.searchName)}`);
++                            const searchRes = await throttledTMDBFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(override.searchName)}`);
+                             const searchData = await searchRes.json();
+ 
+                             if (searchData.results && searchData.results.length > 0) {
+@@ -351,10 +375,10 @@ async function fetchTMDBEpisodes(animeName) {
+                                 const showId = show.id;
+ 
+                                 // Get full show details including all seasons
+-                                const showRes = await fetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
++                                const showRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
+                                 const showData = await showRes.json();
+ 
+                                 const episodeMap = {};
+                                 let cumulativeEps = 0;
+                                 let targetSeasonFound = false;
+@@ -368,7 +392,7 @@ async function fetchTMDBEpisodes(animeName) {
+                                             targetSeasonFound = true;
+ 
+                                             // Fetch this season's episodes
+-                                            const seasonRes = await fetch(`${TMDB_BASE}/tv/${showId}/season/${season.season_number}?api_key=${TMDB_API_KEY}`);
++                                            const seasonRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}/season/${season.season_number}?api_key=${TMDB_API_KEY}`);
+                                             const seasonData = await seasonRes.json();
+ 
+                                             if (seasonData.episodes) {
+@@ -444,10 +468,10 @@ async function fetchTMDBEpisodes(animeName) {
+                     // Check for automatic season handling
+                     const autoOffset = getAutomaticOffset(animeName);
+                     if (autoOffset) {
+                         try {
+ 
+-                            const searchRes = await fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(autoOffset.searchName)}`);
++                            const searchRes = await throttledTMDBFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(autoOffset.searchName)}`);
+                             const searchData = await searchRes.json();
+ 
+                             if (searchData.results && searchData.results.length > 0) {
+@@ -455,7 +479,7 @@ async function fetchTMDBEpisodes(animeName) {
+                                 const showId = show.id;
+ 
+-                                const showRes = await fetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
++                                const showRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
+                                 const showData = await showRes.json();
+ 
+                                 let cumulativeEps = 0;
+@@ -470,7 +494,7 @@ async function fetchTMDBEpisodes(animeName) {
+                                     }
+                                 }
+ 
+-                                const seasonRes = await fetch(`${TMDB_BASE}/tv/${showId}/season/${autoOffset.seasonNum}?api_key=${TMDB_API_KEY}`);
++                                const seasonRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}/season/${autoOffset.seasonNum}?api_key=${TMDB_API_KEY}`);
+                                 const seasonData = await seasonRes.json();
+ 
+                                 const episodeMap = {};
+@@ -519,13 +543,13 @@ async function fetchTMDBEpisodes(animeName) {
+                         const searchName = normalizeForTMDB(baseTitle);
+ 
+ 
+                         // Search for the show
+                         let searchData;
+-                        const searchRes = await fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchName)}`);
++                        const searchRes = await throttledTMDBFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchName)}`);
+                         searchData = await searchRes.json();
+ 
+                         // Try without colon if first search fails
+                         if ((!searchData.results || searchData.results.length === 0) && searchName.includes(':')) {
+                             const baseName = searchName.split(':')[0].trim();
+-                            const fallbackRes = await fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(baseName)}`);
++                            const fallbackRes = await throttledTMDBFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(baseName)}`);
+                             searchData = await fallbackRes.json();
+                         }
+ 
+@@ -539,7 +563,7 @@ async function fetchTMDBEpisodes(animeName) {
+                         const showId = show.id;
+ 
+                         // Get full show details including all seasons
+-                        const showRes = await fetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
++                        const showRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
+                         const showData = await showRes.json();
+ 
+                         // Improved season detection - check for part indicators
+@@ -587,7 +611,7 @@ async function fetchTMDBEpisodes(animeName) {
+                         }
+ 
+                         // Fetch the target season
+-                        const seasonRes = await fetch(`${TMDB_BASE}/tv/${showId}/season/${seasonNum}?api_key=${TMDB_API_KEY}`);
++                        const seasonRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}/season/${seasonNum}?api_key=${TMDB_API_KEY}`);
+                         const seasonData = await seasonRes.json();
+ 
+                         const episodeMap = {};
+@@ -641,7 +665,7 @@ async function prefetchTMDBData() {
+                     if (!TMDB_API_KEY) return;
+                     const animeNames = new Set();
+                     for (const [key, value] of animeMetadata.entries()) {
+                         if (value?.name) animeNames.add(value.name);
+                     }
+                     let fetched = 0;
+                     let genresEnriched = 0;
+@@ -658,16 +682,16 @@ async function prefetchTMDBData() {
+                         }
+                         try {
+                             const tmdbResult = await fetchTMDBEpisodes(name);
+                             fetched++;
+                             // Write TMDB genres back to animeMetadata if the entry has no genres
+                             if (tmdbResult?.showInfo?.genres?.length) {
+                                 const metaKey = titleToChannelName(name);
+                                 const entry = animeMetadata.get(metaKey);
+                                 if (entry && (!entry.genres || entry.genres.length === 0)) {
+                                     entry.genres = tmdbResult.showInfo.genres;
+                                     genresEnriched++;
+                                 }
+                             }
+-                            if (fetched % 20 === 0) {
+-                                await new Promise(r => setTimeout(r, 500));
++                            if (fetched % 10 === 0) {
++                                await new Promise(r => setTimeout(r, 1000));
+                             }
+                         } catch (err) {}
+                     }
+

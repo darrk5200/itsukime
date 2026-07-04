@@ -151,6 +151,35 @@
                 const TMDB_BASE = 'https://api.themoviedb.org/3';
                 const TMDB_IMG = 'https://image.tmdb.org/t/p/w300';
 
+                // TMDB rate limiting and retry logic
+                const TMDB_REQUEST_DELAY_MS = 250; // 250ms between requests (4 req/sec max)
+                const TMDB_TIMEOUT_MS = 10000; // 10 second timeout per request
+                const TMDB_MAX_RETRIES = 3;
+                let lastTMDBRequestTime = 0;
+
+                async function fetchWithTimeout(url, timeoutMs = TMDB_TIMEOUT_MS) {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+                    try {
+                        const response = await fetch(url, { signal: controller.signal });
+                        clearTimeout(timeoutId);
+                        return response;
+                    } catch (err) {
+                        clearTimeout(timeoutId);
+                        throw err;
+                    }
+                }
+
+                async function throttledTMDBFetch(url) {
+                    const now = Date.now();
+                    const timeSinceLastRequest = now - lastTMDBRequestTime;
+                    if (timeSinceLastRequest < TMDB_REQUEST_DELAY_MS) {
+                        await new Promise(r => setTimeout(r, TMDB_REQUEST_DELAY_MS - timeSinceLastRequest));
+                    }
+                    lastTMDBRequestTime = Date.now();
+                    return fetchWithTimeout(url);
+                }
+
                 // Manual episode offset overrides
                 // Format: "Anime Name ### TMDB Show Name EP{start_episode}"
                 // This tells TMDB to search for "TMDB Show Name" and start from that episode number
@@ -350,7 +379,7 @@
                     if (override) {
                         try {
 
-                            const searchRes = await fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(override.searchName)}`);
+                            const searchRes = await throttledTMDBFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(override.searchName)}`);
                             const searchData = await searchRes.json();
 
                             if (searchData.results && searchData.results.length > 0) {
@@ -358,7 +387,7 @@
                                 const showId = show.id;
 
                                 // Get full show details including all seasons
-                                const showRes = await fetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
+                                const showRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
                                 const showData = await showRes.json();
 
                                 const episodeMap = {};
@@ -379,7 +408,7 @@
                                             targetSeasonFound = true;
 
                                             // Fetch this season's episodes
-                                            const seasonRes = await fetch(`${TMDB_BASE}/tv/${showId}/season/${season.season_number}?api_key=${TMDB_API_KEY}`);
+                                            const seasonRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}/season/${season.season_number}?api_key=${TMDB_API_KEY}`);
                                             const seasonData = await seasonRes.json();
 
                                             if (seasonData.episodes) {
@@ -441,14 +470,14 @@
                     if (autoOffset) {
                         try {
 
-                            const searchRes = await fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(autoOffset.searchName)}`);
+                            const searchRes = await throttledTMDBFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(autoOffset.searchName)}`);
                             const searchData = await searchRes.json();
 
                             if (searchData.results && searchData.results.length > 0) {
                                 const show = pickBestTMDBResult(searchData.results, autoOffset.searchName);
                                 const showId = show.id;
 
-                                const showRes = await fetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
+                                const showRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
                                 const showData = await showRes.json();
 
                                 let cumulativeEps = 0;
@@ -464,7 +493,7 @@
                                     }
                                 }
 
-                                const seasonRes = await fetch(`${TMDB_BASE}/tv/${showId}/season/${autoOffset.seasonNum}?api_key=${TMDB_API_KEY}`);
+                                const seasonRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}/season/${autoOffset.seasonNum}?api_key=${TMDB_API_KEY}`);
                                 const seasonData = await seasonRes.json();
 
                                 const episodeMap = {};
@@ -516,13 +545,13 @@
 
                         // Search for the show
                         let searchData;
-                        const searchRes = await fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchName)}`);
+                        const searchRes = await throttledTMDBFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchName)}`);
                         searchData = await searchRes.json();
 
                         // Try without colon if first search fails
                         if ((!searchData.results || searchData.results.length === 0) && searchName.includes(':')) {
                             const baseName = searchName.split(':')[0].trim();
-                            const fallbackRes = await fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(baseName)}`);
+                            const fallbackRes = await throttledTMDBFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(baseName)}`);
                             searchData = await fallbackRes.json();
                         }
 
@@ -536,7 +565,7 @@
                         const showId = show.id;
 
                         // Get full show details including all seasons
-                        const showRes = await fetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
+                        const showRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
                         const showData = await showRes.json();
 
                         // Improved season detection - check for part indicators
@@ -584,7 +613,7 @@
                         }
 
                         // Fetch the target season
-                        const seasonRes = await fetch(`${TMDB_BASE}/tv/${showId}/season/${seasonNum}?api_key=${TMDB_API_KEY}`);
+                        const seasonRes = await throttledTMDBFetch(`${TMDB_BASE}/tv/${showId}/season/${seasonNum}?api_key=${TMDB_API_KEY}`);
                         const seasonData = await seasonRes.json();
 
                         const episodeMap = {};
@@ -673,8 +702,8 @@
                                     genresEnriched++;
                                 }
                             }
-                            if (fetched % 20 === 0) {
-                                await new Promise(r => setTimeout(r, 500));
+                            if (fetched % 10 === 0) {
+                                await new Promise(r => setTimeout(r, 1000));
                             }
                         } catch (err) {}
                     }
