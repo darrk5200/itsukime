@@ -9,7 +9,7 @@
                 require("dotenv").config();
 
                 // ============================================
-                // CONFIGURATION
+                // CONFIGURATION FR
                 // ============================================
 
                 // Multiple bot configuration for parallel caching
