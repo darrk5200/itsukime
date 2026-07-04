@@ -1234,7 +1234,17 @@
 
                         if (!res.ok) break;
 
-                        const batch = await res.json();
+                        let batch;
+                        try {
+                            batch = await res.json();
+                        } catch (parseErr) {
+                            // Handle premature close or invalid JSON response body
+                            networkAttempt++;
+                            if (networkAttempt > MAX_NETWORK_RETRIES) throw parseErr;
+                            const backoff = Math.min(1000 * 2 ** (networkAttempt - 1), 30000);
+                            await new Promise(r => setTimeout(r, backoff));
+                            continue;
+                        }
                         if (!Array.isArray(batch) || batch.length === 0) break;
 
                         messages.push(...batch);
