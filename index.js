@@ -9,7 +9,7 @@
                 require("dotenv").config();
 
                 // ============================================
-                // CONFIGURATION
+                // CONFIGURATION FR
                 // ============================================
 
                 // Multiple bot configuration for parallel caching
@@ -339,22 +339,6 @@
                     return best || results[0];
                 }
 
-                // Fetch wrapper with retry for transient network errors (e.g. "Premature close")
-                async function tmdbFetch(url, opts) {
-                    const MAX_RETRIES = 5;
-                    let attempt = 0;
-                    while (true) {
-                        try {
-                            return await fetch(url, opts);
-                        } catch (err) {
-                            attempt++;
-                            if (attempt > MAX_RETRIES) throw err;
-                            const backoff = Math.min(1000 * 2 ** (attempt - 1), 30000);
-                            await new Promise(r => setTimeout(r, backoff));
-                        }
-                    }
-                }
-
                 // FIXED: Improved TMDB episode fetching with better season and offset handling
                 async function fetchTMDBEpisodes(animeName) {
                     if (!TMDB_API_KEY) return null;
@@ -366,7 +350,7 @@
                     if (override) {
                         try {
 
-                            const searchRes = await tmdbFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(override.searchName)}`);
+                            const searchRes = await fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(override.searchName)}`);
                             const searchData = await searchRes.json();
 
                             if (searchData.results && searchData.results.length > 0) {
@@ -374,7 +358,7 @@
                                 const showId = show.id;
 
                                 // Get full show details including all seasons
-                                const showRes = await tmdbFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
+                                const showRes = await fetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
                                 const showData = await showRes.json();
 
                                 const episodeMap = {};
@@ -395,7 +379,7 @@
                                             targetSeasonFound = true;
 
                                             // Fetch this season's episodes
-                                            const seasonRes = await tmdbFetch(`${TMDB_BASE}/tv/${showId}/season/${season.season_number}?api_key=${TMDB_API_KEY}`);
+                                            const seasonRes = await fetch(`${TMDB_BASE}/tv/${showId}/season/${season.season_number}?api_key=${TMDB_API_KEY}`);
                                             const seasonData = await seasonRes.json();
 
                                             if (seasonData.episodes) {
@@ -457,14 +441,14 @@
                     if (autoOffset) {
                         try {
 
-                            const searchRes = await tmdbFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(autoOffset.searchName)}`);
+                            const searchRes = await fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(autoOffset.searchName)}`);
                             const searchData = await searchRes.json();
 
                             if (searchData.results && searchData.results.length > 0) {
                                 const show = pickBestTMDBResult(searchData.results, autoOffset.searchName);
                                 const showId = show.id;
 
-                                const showRes = await tmdbFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
+                                const showRes = await fetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
                                 const showData = await showRes.json();
 
                                 let cumulativeEps = 0;
@@ -480,7 +464,7 @@
                                     }
                                 }
 
-                                const seasonRes = await tmdbFetch(`${TMDB_BASE}/tv/${showId}/season/${autoOffset.seasonNum}?api_key=${TMDB_API_KEY}`);
+                                const seasonRes = await fetch(`${TMDB_BASE}/tv/${showId}/season/${autoOffset.seasonNum}?api_key=${TMDB_API_KEY}`);
                                 const seasonData = await seasonRes.json();
 
                                 const episodeMap = {};
@@ -532,13 +516,13 @@
 
                         // Search for the show
                         let searchData;
-                        const searchRes = await tmdbFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchName)}`);
+                        const searchRes = await fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchName)}`);
                         searchData = await searchRes.json();
 
                         // Try without colon if first search fails
                         if ((!searchData.results || searchData.results.length === 0) && searchName.includes(':')) {
                             const baseName = searchName.split(':')[0].trim();
-                            const fallbackRes = await tmdbFetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(baseName)}`);
+                            const fallbackRes = await fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(baseName)}`);
                             searchData = await fallbackRes.json();
                         }
 
@@ -552,7 +536,7 @@
                         const showId = show.id;
 
                         // Get full show details including all seasons
-                        const showRes = await tmdbFetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
+                        const showRes = await fetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_API_KEY}`);
                         const showData = await showRes.json();
 
                         // Improved season detection - check for part indicators
@@ -600,7 +584,7 @@
                         }
 
                         // Fetch the target season
-                        const seasonRes = await tmdbFetch(`${TMDB_BASE}/tv/${showId}/season/${seasonNum}?api_key=${TMDB_API_KEY}`);
+                        const seasonRes = await fetch(`${TMDB_BASE}/tv/${showId}/season/${seasonNum}?api_key=${TMDB_API_KEY}`);
                         const seasonData = await seasonRes.json();
 
                         const episodeMap = {};
@@ -1204,25 +1188,14 @@
                 async function fetchChannelMessagesViaREST(channelId, token) {
                     const messages = [];
                     let lastId = null;
-                    const MAX_NETWORK_RETRIES = 5;
 
                     while (true) {
                         let url = `https://discord.com/api/v9/channels/${channelId}/messages?limit=100`;
                         if (lastId) url += `&before=${lastId}`;
 
                         let res;
-                        let networkAttempt = 0;
                         while (true) {
-                            try {
-                                res = await fetch(url, { headers: { 'Authorization': token } });
-                            } catch (networkErr) {
-                                // Retry transient network errors (e.g. "Premature close") with backoff
-                                networkAttempt++;
-                                if (networkAttempt > MAX_NETWORK_RETRIES) throw networkErr;
-                                const backoff = Math.min(1000 * 2 ** (networkAttempt - 1), 30000);
-                                await new Promise(r => setTimeout(r, backoff));
-                                continue;
-                            }
+                            res = await fetch(url, { headers: { 'Authorization': token } });
                             if (res.status === 429) {
                                 let retryAfter = 1;
                                 try { const body = await res.json(); retryAfter = body.retry_after || 1; } catch {}
@@ -1234,17 +1207,7 @@
 
                         if (!res.ok) break;
 
-                        let batch;
-                        try {
-                            batch = await res.json();
-                        } catch (parseErr) {
-                            // Handle premature close or invalid JSON response body
-                            networkAttempt++;
-                            if (networkAttempt > MAX_NETWORK_RETRIES) throw parseErr;
-                            const backoff = Math.min(1000 * 2 ** (networkAttempt - 1), 30000);
-                            await new Promise(r => setTimeout(r, backoff));
-                            continue;
-                        }
+                        const batch = await res.json();
                         if (!Array.isArray(batch) || batch.length === 0) break;
 
                         messages.push(...batch);
