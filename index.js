@@ -423,6 +423,7 @@
                                     networks: (showData.networks || []).map(n => n.name).filter(Boolean),
                                     type: showData.type || null,
                                     originalLanguage: showData.original_language || null,
+                                    posterUrl: showData.poster_path ? `https://image.tmdb.org/t/p/w300${showData.poster_path}` : null,
                                     backdropUrl: showData.backdrop_path ? `https://image.tmdb.org/t/p/w1280${showData.backdrop_path}` : null
                                 };
 
@@ -494,6 +495,7 @@
                                     networks: (showData.networks || []).map(n => n.name).filter(Boolean),
                                     type: showData.type || null,
                                     originalLanguage: showData.original_language || null,
+                                    posterUrl: showData.poster_path ? `https://image.tmdb.org/t/p/w300${showData.poster_path}` : null,
                                     backdropUrl: showData.backdrop_path ? `https://image.tmdb.org/t/p/w1280${showData.backdrop_path}` : null
                                 };
 
@@ -620,6 +622,7 @@
                             networks: (showData.networks || []).map(n => n.name).filter(Boolean),
                             type: showData.type || null,
                             originalLanguage: showData.original_language || null,
+                            posterUrl: showData.poster_path ? `https://image.tmdb.org/t/p/w300${showData.poster_path}` : null,
                             backdropUrl: showData.backdrop_path ? `https://image.tmdb.org/t/p/w1280${showData.backdrop_path}` : null
                         };
 
@@ -649,14 +652,19 @@
                     for (const name of animeNames) {
                         const cacheKey = name.toLowerCase().replace(/[^a-z0-9]/g, '');
                         if (tmdbCache.has(cacheKey)) {
-                            // Backfill genres from already-cached TMDB data
+                            // Backfill genres and poster from already-cached TMDB data
                             const cached = tmdbCache.get(cacheKey);
-                            if (cached?.showInfo?.genres?.length) {
+                            if (cached?.showInfo) {
                                 const metaKey = titleToChannelName(name);
                                 const entry = animeMetadata.get(metaKey);
-                                if (entry && (!entry.genres || entry.genres.length === 0)) {
-                                    entry.genres = cached.showInfo.genres;
-                                    genresEnriched++;
+                                if (entry) {
+                                    if (cached.showInfo.genres?.length && (!entry.genres || entry.genres.length === 0)) {
+                                        entry.genres = cached.showInfo.genres;
+                                        genresEnriched++;
+                                    }
+                                    if (cached.showInfo.posterUrl && !entry.tmdbPosterUrl) {
+                                        entry.tmdbPosterUrl = cached.showInfo.posterUrl;
+                                    }
                                 }
                             }
                             continue;
@@ -664,13 +672,18 @@
                         try {
                             const tmdbResult = await fetchTMDBEpisodes(name);
                             fetched++;
-                            // Write TMDB genres back to animeMetadata if the entry has no genres
-                            if (tmdbResult?.showInfo?.genres?.length) {
+                            // Write TMDB genres and poster back to animeMetadata
+                            if (tmdbResult?.showInfo) {
                                 const metaKey = titleToChannelName(name);
                                 const entry = animeMetadata.get(metaKey);
-                                if (entry && (!entry.genres || entry.genres.length === 0)) {
-                                    entry.genres = tmdbResult.showInfo.genres;
-                                    genresEnriched++;
+                                if (entry) {
+                                    if (tmdbResult.showInfo.genres?.length && (!entry.genres || entry.genres.length === 0)) {
+                                        entry.genres = tmdbResult.showInfo.genres;
+                                        genresEnriched++;
+                                    }
+                                    if (tmdbResult.showInfo.posterUrl && !entry.tmdbPosterUrl) {
+                                        entry.tmdbPosterUrl = tmdbResult.showInfo.posterUrl;
+                                    }
                                 }
                             }
                             if (fetched % 20 === 0) {
