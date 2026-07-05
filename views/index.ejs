@@ -2720,7 +2720,7 @@
                                 <% Object.entries(animeMetadata).forEach(([channelName, metadata]) => { %>
                                     <% if (!recentlyAddedChannels.has(channelName)) { %>
                                     <div class="anime-card <%= gridIndex >= 80 ? 'hidden-anime' : '' %>" data-channel="<%= channelName %>" data-index="<%= gridIndex %>" data-genres="<%= (metadata.genres || []).join(',') %>">
-                                        <img src="<%= metadata.imageUrl %>" alt="<%= metadata.name %>" class="anime-image" loading="<%= gridIndex < 20 ? 'eager' : 'lazy' %>" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                                        <img src="<%= metadata.tmdbPosterUrl || metadata.imageUrl %>" alt="<%= metadata.name %>" class="anime-image" loading="<%= gridIndex < 20 ? 'eager' : 'lazy' %>" data-fallback="<%= metadata.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image' %>" onerror="imgFallback(this)">
                                         <div class="anime-info">
                                             <div class="anime-name"><%= metadata.name %></div>
                                             <div class="anime-genres">
@@ -2864,6 +2864,14 @@
                         </button>
                     </div>
 
+                    <script>
+                        // ── Image fallback helper ─────────────────────────────────────────
+                        // Usage: onerror="imgFallback(this)"  data-fallback="<fallback-url>"
+                        function imgFallback(el) {
+                            el.onerror = null;
+                            el.src = el.dataset.fallback || 'https://via.placeholder.com/300x450?text=No+Image';
+                        }
+                    </script>
                     <script>
                         // ── Theme Management ──────────────────────────────────────────────
                         (function() {
@@ -3329,10 +3337,11 @@
                                     .map(g => `<span class="genre-tag">${g}</span>`).join('');
 
                                 card.innerHTML = `
-                                    <img src="${item.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}"
+                                    <img src="${meta.tmdbPosterUrl || item.tmdbPosterUrl || item.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}"
                                          alt="${(item.name || channelName).replace(/"/g, '&quot;')}"
                                          loading="lazy"
-                                         onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                                         data-fallback="${item.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}"
+                                         onerror="imgFallback(this)">
                                     <div class="ra-info">
                                         <div class="ra-name">${item.name || channelName}</div>
                                         <div class="anime-genres" style="margin-top:0.25rem">${genreTags}</div>
@@ -3500,12 +3509,14 @@
                                 const timestamp = new Date(entry.timestamp);
                                 const timeAgo = getTimeAgo(timestamp);
 
+                                const _histMeta = animeMetadata[entry.channelName];
                                 card.innerHTML = `
-                                    <img src="${entry.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}" 
+                                    <img src="${_histMeta?.tmdbPosterUrl || entry.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}" 
                                          alt="${entry.animeName}" 
                                          class="anime-image"
                                          loading="lazy"
-                                         onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                                         data-fallback="${entry.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}"
+                                         onerror="imgFallback(this)">
                                     <span class="history-timestamp">${timeAgo}</span>
                                     <span class="history-episode">EP ${entry.episodeNumber % 1 !== 0 ? entry.episodeNumber : entry.episodeNumber.toString().padStart(2, '0')}</span>
                                     <div class="anime-info">
@@ -3678,8 +3689,9 @@
                                 else sorted.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
                                 let html = '<div class="history-grid visible" style="margin-top: 1rem; grid-template-columns: repeat(3, 1fr) !important;">';
                                 sorted.forEach(anime => {
+                                    const _bmMeta = animeMetadata[anime.channelName];
                                     html += `<div class="anime-card" onclick="showAnimeDetailByChannel('${anime.channelName}')">
-                                        <img src="${anime.imageUrl}" alt="${anime.name}" class="anime-image">
+                                        <img src="${_bmMeta?.tmdbPosterUrl || anime.imageUrl}" alt="${anime.name}" class="anime-image" data-fallback="${anime.imageUrl}" onerror="imgFallback(this)">
                                         <div class="anime-info"><div class="anime-name">${anime.name}</div></div>
                                     </div>`;
                                 });
@@ -3792,9 +3804,10 @@
 
                                 let html = '<div class="history-grid visible" style="margin-top: 1rem; grid-template-columns: repeat(3, 1fr) !important;">';
                                 sorted.forEach(anime => {
+                                    const _bm2Meta = animeMetadata[anime.channelName];
                                     html += `
                                         <div class="anime-card" onclick="showAnimeDetailByChannel('${anime.channelName}')">
-                                            <img src="${anime.imageUrl}" alt="${anime.name}" class="anime-image">
+                                            <img src="${_bm2Meta?.tmdbPosterUrl || anime.imageUrl}" alt="${anime.name}" class="anime-image" data-fallback="${anime.imageUrl}" onerror="imgFallback(this)">
                                             <div class="anime-info">
                                                 <div class="anime-name">${anime.name}</div>
                                             </div>
@@ -3982,7 +3995,8 @@
                             updateBookmarkBtn();
 
                             // Update detail view (now shows above video player)
-                            detailImage.src = metadata.imageUrl;
+                            detailImage.src = metadata.tmdbPosterUrl || metadata.imageUrl;
+                            detailImage.onerror = () => { detailImage.onerror = null; detailImage.src = metadata.imageUrl; };
                             detailImage.alt = metadata.name;
                             detailTitle.textContent = metadata.name;
 
@@ -4061,7 +4075,7 @@
                                 if (seenNames.has(alphaNorm(displayName))) continue;
                                 seenNames.add(alphaNorm(displayName));
 
-                                results.push({ channel: name, name: displayName, imageUrl: meta.imageUrl || '' });
+                                results.push({ channel: name, name: displayName, imageUrl: meta.imageUrl || '', tmdbPosterUrl: meta.tmdbPosterUrl || null });
                             }
                             return results;
                         }
@@ -4081,7 +4095,7 @@
 
                             // Build full list: current + related, dedup by name, then sort by channel name for stable order
                             const allShows = [];
-                            if (curMeta) allShows.push({ channel: currentChannel, name: curDisplayName, imageUrl: curMeta.imageUrl || '', isCurrent: true });
+                            if (curMeta) allShows.push({ channel: currentChannel, name: curDisplayName, imageUrl: curMeta.imageUrl || '', tmdbPosterUrl: curMeta.tmdbPosterUrl || null, isCurrent: true });
                             related.forEach(show => {
                                 if (alphaNorm(show.name) !== alphaNorm(curDisplayName)) {
                                     allShows.push({ ...show, isCurrent: false });
@@ -4099,7 +4113,7 @@
                             allShows.forEach(show => {
                                 const card = document.createElement('div');
                                 card.className = 'franchise-card' + (show.isCurrent ? ' active-franchise' : '');
-                                card.innerHTML = `<img src="${show.imageUrl || ''}" alt="${show.name}" onerror="this.src='https://via.placeholder.com/36x54?text=?'"><div class="franchise-card-name">${show.name}</div>`;
+                                card.innerHTML = `<img src="${show.tmdbPosterUrl || show.imageUrl || ''}" alt="${show.name}" data-fallback="${show.imageUrl || 'https://via.placeholder.com/36x54?text=?'}" onerror="imgFallback(this)"><div class="franchise-card-name">${show.name}</div>`;
                                 if (!show.isCurrent) {
                                     card.addEventListener('click', () => {
                                         const m = animeMetadata[show.channel];
@@ -4573,7 +4587,7 @@
                                 const genreTags = (metadata.genres || []).slice(0, 2)
                                     .map(g => `<span class="genre-tag">${g}</span>`).join('');
                                 card.innerHTML = `
-                                    <img src="${metadata.imageUrl || ''}" alt="${(metadata.name || '').replace(/"/g, '&quot;')}" class="anime-image" loading="${gridIndex < 20 ? 'eager' : 'lazy'}" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                                    <img src="${metadata.tmdbPosterUrl || metadata.imageUrl || ''}" alt="${(metadata.name || '').replace(/"/g, '&quot;')}" class="anime-image" loading="${gridIndex < 20 ? 'eager' : 'lazy'}" data-fallback="${metadata.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}" onerror="imgFallback(this)">
                                     <div class="anime-info">
                                         <div class="anime-name">${metadata.name || channelName}</div>
                                         <div class="anime-genres">${genreTags}</div>
@@ -4688,14 +4702,15 @@
                             seasonalTrack.innerHTML = '';
                             seasonalAnime.forEach(title => {
                                 const found = findSeasonalChannel(title);
-                                const imageUrl = found.meta ? found.meta.imageUrl : 'https://via.placeholder.com/640x360?text=' + encodeURIComponent(title);
+                                const imageUrl = found.meta ? (found.meta.tmdbPosterUrl || found.meta.imageUrl) : 'https://via.placeholder.com/640x360?text=' + encodeURIComponent(title);
+                                const imageUrlFallback = found.meta ? found.meta.imageUrl : '';
                                 const displayName = title;
                                 const channelName = found.channelKey;
 
                                 const card = document.createElement('div');
                                 card.className = 'seasonal-card';
                                 card.innerHTML = `
-                                    <img src="${imageUrl}" alt="${displayName}" class="seasonal-card-image" loading="lazy" onerror="this.src='https://via.placeholder.com/640x360?text=No+Image'">
+                                    <img src="${imageUrl}" alt="${displayName}" class="seasonal-card-image" loading="lazy" data-fallback="${imageUrlFallback || 'https://via.placeholder.com/640x360?text=No+Image'}" onerror="imgFallback(this)">
                                     <div class="seasonal-card-overlay">
                                         <span class="seasonal-card-name">${displayName}</span>
                                         <button class="seasonal-watch-btn" data-channel="${channelName}">Start Watching</button>
