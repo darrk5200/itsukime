@@ -2408,12 +2408,15 @@
                             scroll-snap-type: x proximity;
                             -webkit-overflow-scrolling: touch;
                             scrollbar-width: none;
-                            padding-bottom: 0.25rem;
+                            -ms-overflow-style: none;
+                            padding-bottom: 0;
                             cursor: grab;
                         }
 
                         .continue-watching-grid::-webkit-scrollbar {
                             display: none;
+                            width: 0;
+                            height: 0;
                         }
 
                         .continue-watching-grid.is-dragging {
@@ -3101,6 +3104,8 @@
                             watchHistory = []; continueWatching = []; bookmarks = [];
                             loadWatchHistory();
                             displayContinueWatching();
+                            const footerNav = document.querySelector('.footer-nav');
+                            if (footerNav) footerNav.style.visibility = '';
                         }
 
                         // Switch profile AND go to the Profile tab
@@ -3251,6 +3256,9 @@
                             if (existing) existing.remove();
                             const pb = document.getElementById('pageBlocker');
                             if (pb) pb.remove();
+
+                            const footerNav = document.querySelector('.footer-nav');
+                            if (footerNav) footerNav.style.visibility = 'hidden';
 
                             const overlay = document.createElement('div');
                             overlay.className = 'profile-picker-overlay';
@@ -3856,7 +3864,7 @@
                                 if (sort === 'az') sorted.sort((a, b) => a.name.localeCompare(b.name));
                                 else if (sort === 'za') sorted.sort((a, b) => b.name.localeCompare(a.name));
                                 else sorted.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
-                                let html = '<div class="history-grid visible" style="margin-top: 1rem; grid-template-columns: repeat(3, 1fr) !important;">';
+                                let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:1rem;">';
                                 sorted.forEach(anime => {
                                     const _bmMeta = animeMetadata[anime.channelName];
                                     html += `<div class="anime-card" onclick="showAnimeDetailByChannel('${anime.channelName}')">
@@ -3869,8 +3877,8 @@
                             }
 
                             historyItems.innerHTML = `
-                                <div class="profile-view">
-                                    <div style="display:flex; align-items:center; justify-content:space-between; border-bottom: 1px solid var(--border-accent); padding-bottom: 0.5rem; margin-bottom: 0.25rem; margin-top: 1rem;">
+                                <div style="padding: 0 0.25rem;">
+                                    <div style="display:flex; align-items:center; justify-content:space-between; border-bottom: 1px solid var(--border-accent); padding-bottom: 0.5rem; margin-bottom: 0.5rem; margin-top: 0.5rem;">
                                         <h4 style="color: var(--accent-soft); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin:0;">Bookmarked Anime</h4>
                                         <select id="bookmarkSortSelectNav" style="background:var(--bg-card);color:var(--text-dim);border:1px solid var(--border-accent);border-radius:6px;padding:0.2rem 0.4rem;font-size:0.72rem;font-weight:700;cursor:pointer;">
                                             <option value="recent" ${bookmarkSort==='recent'?'selected':''}>Recently Added</option>
@@ -3971,7 +3979,7 @@
                                 else if (sort === 'za') sorted.sort((a, b) => b.name.localeCompare(a.name));
                                 else sorted.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
 
-                                let html = '<div class="history-grid visible" style="margin-top: 1rem; grid-template-columns: repeat(3, 1fr) !important;">';
+                                let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:1rem;">';
                                 sorted.forEach(anime => {
                                     const _bm2Meta = animeMetadata[anime.channelName];
                                     html += `
