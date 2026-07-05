@@ -2969,12 +2969,15 @@
                             if (el instanceof Event) el = el.currentTarget || el.target;
                             if (!el || !el.dataset) return;
                             el.onerror = null;
-                            const fallback = el.dataset.fallback;
-                            if (fallback && fallback !== el.src && !el.dataset.fallbackTried) {
+                            // Try the data-fallback URL exactly once, then give up
+                            if (!el.dataset.fallbackTried) {
                                 el.dataset.fallbackTried = '1';
-                                el.onerror = imgFallback;
-                                el.src = fallback;
-                                return;
+                                const fallback = el.dataset.fallback;
+                                if (fallback) {
+                                    el.onerror = imgFallback;
+                                    el.src = fallback;
+                                    return;
+                                }
                             }
                             // Both images failed — show anime name as styled text
                             el.style.display = 'none';
@@ -3371,12 +3374,13 @@
                         }
 
                         // Add to watch history
-                        function addToHistory(animeName, channelName, episodeNumber, episodeTitle, imageUrl, episodeThumbnail) {
+                        function addToHistory(animeName, channelName, episodeNumber, episodeTitle, imageUrl, episodeThumbnail, episodeDescription) {
                             const entry = {
                                 animeName: animeName,
                                 channelName: channelName,
                                 episodeNumber: episodeNumber,
                                 episodeTitle: episodeTitle,
+                                episodeDescription: episodeDescription || null,
                                 imageUrl: imageUrl,
                                 episodeThumbnail: episodeThumbnail || null,
                                 timestamp: Date.now(),
@@ -3652,9 +3656,9 @@
                                     ? `${fmtTime(entry.videoTimestamp)}/${fmtTime(entry.duration)}`
                                     : null;
 
-                                // Synopsis: trim episode title to 9 words; blank if absent
-                                const synopsis = entry.episodeTitle
-                                    ? trimWords(entry.episodeTitle, 9)
+                                // Synopsis: TMDB episode description trimmed to 9 words; blank if absent
+                                const synopsis = entry.episodeDescription
+                                    ? trimWords(entry.episodeDescription, 9)
                                     : '';
 
                                 card.innerHTML = `
@@ -4645,9 +4649,10 @@
                                     metadata.name,
                                     currentChannel,
                                     video.episode || 1,
-                                    video.title,
+                                    video.tmdbTitle || video.title,
                                     metadata.imageUrl,
-                                    video.tmdbThumbnail || video.thumbnail || null
+                                    video.tmdbThumbnail || video.thumbnail || null,
+                                    video.tmdbDescription || null
                                 );
                             }
 
