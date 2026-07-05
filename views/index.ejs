@@ -348,21 +348,16 @@
                         }
 
                         /* History Grid - Smaller cards on desktop */
+                        /* YouTube-style Watch History */
                         .history-grid {
-                            display: grid;
-                            grid-template-columns: repeat(3, 1fr);
-                            gap: 1.5rem;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 0;
                             margin-top: 2rem;
                         }
 
-                        @media (min-width: 1024px) {
-                            .history-grid {
-                                grid-template-columns: repeat(6, 1fr);
-                            }
-                        }
-
                         .history-grid.visible {
-                            display: grid;
+                            display: flex;
                         }
 
                         .history-grid.hidden {
@@ -370,11 +365,10 @@
                         }
 
                         .history-header {
-                            grid-column: 1 / -1;
                             display: flex;
                             justify-content: space-between;
                             align-items: center;
-                            margin-bottom: 0.5rem;
+                            margin-bottom: 0.75rem;
                             padding-bottom: 0.5rem;
                             border-bottom: 1px solid var(--border-accent);
                         }
@@ -448,36 +442,149 @@
                             transform: translateY(-8px) scale(1.02);
                         }
 
-                        /* History Card - Smaller version */
+                        /* YouTube-style History Card */
                         .history-card {
-                            background: var(--bg-card);
-                            border-radius: 10px;
-                            overflow: hidden;
+                            display: flex;
+                            align-items: flex-start;
+                            gap: 0.9rem;
+                            padding: 0.7rem 0.4rem;
+                            border-bottom: 1px solid var(--border-color);
                             cursor: pointer;
-                            transition: all 0.3s ease;
-                            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-                            border: 1px solid var(--border-color);
+                            transition: background 0.2s;
+                            border-radius: 8px;
+                            background: transparent;
                             position: relative;
-                            width: 100%;
-                            padding-bottom: 150%;
-                            height: 0;
-                            transform: scale(0.8);
-                            transform-origin: center;
-                        }
-
-                        @supports (aspect-ratio: 2/3) {
-                            .history-card {
-                                aspect-ratio: 2/3;
-                                padding-bottom: 0;
-                                height: auto;
-                            }
                         }
 
                         .history-card:hover {
-                            transform: translateY(-15px);
-                            border-color: var(--border-accent);
-                            box-shadow: 0 10px 25px var(--accent-glow);
-                            z-index: 5;
+                            background: var(--bg-card);
+                        }
+
+                        /* Thumbnail wrapper */
+                        .history-thumb-wrap {
+                            position: relative;
+                            flex: 0 0 168px;
+                            width: 168px;
+                            aspect-ratio: 16/9;
+                            border-radius: 6px;
+                            overflow: hidden;
+                            background: var(--bg-card);
+                        }
+
+                        .history-thumb {
+                            width: 100%;
+                            height: 100%;
+                            object-fit: cover;
+                            display: block;
+                        }
+
+                        /* Progress track (grey underlay, always visible) */
+                        .history-progress-track {
+                            position: absolute;
+                            bottom: 0;
+                            left: 0;
+                            right: 0;
+                            height: 3px;
+                            background: rgba(255,255,255,0.18);
+                            pointer-events: none;
+                        }
+
+                        /* Red fill inside track */
+                        .history-progress-bar {
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            height: 100%;
+                            background: #e81c1c;
+                            border-radius: 0 2px 2px 0;
+                        }
+
+                        /* EP number badge — bottom-left of thumbnail */
+                        .history-ep-num {
+                            position: absolute;
+                            bottom: 8px;
+                            left: 5px;
+                            background: rgba(0,0,0,0.82);
+                            color: #fff;
+                            font-size: 0.6rem;
+                            font-weight: 700;
+                            padding: 0.1rem 0.35rem;
+                            border-radius: 3px;
+                            pointer-events: none;
+                        }
+
+                        /* Time remaining badge — bottom-right of thumbnail */
+                        .history-ep-badge {
+                            position: absolute;
+                            bottom: 8px;
+                            right: 5px;
+                            background: rgba(0,0,0,0.82);
+                            color: #fff;
+                            font-size: 0.6rem;
+                            font-weight: 700;
+                            padding: 0.1rem 0.35rem;
+                            border-radius: 3px;
+                            pointer-events: none;
+                        }
+
+                        /* Right-side info panel */
+                        .history-info {
+                            flex: 1;
+                            min-width: 0;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 0.25rem;
+                        }
+
+                        .history-info-top {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            gap: 0.4rem;
+                        }
+
+                        .history-anime-name {
+                            font-size: 0.92rem;
+                            font-weight: 700;
+                            color: var(--text-primary, #fff);
+                            display: -webkit-box;
+                            -webkit-line-clamp: 2;
+                            -webkit-box-orient: vertical;
+                            overflow: hidden;
+                            line-height: 1.35;
+                        }
+
+                        .history-ep-title {
+                            font-size: 0.78rem;
+                            color: var(--text-secondary, #aaa);
+                            display: -webkit-box;
+                            -webkit-line-clamp: 2;
+                            -webkit-box-orient: vertical;
+                            overflow: hidden;
+                        }
+
+                        .history-meta {
+                            font-size: 0.72rem;
+                            color: var(--text-muted, #666);
+                            margin-top: 0.1rem;
+                        }
+
+                        /* Per-item remove button */
+                        .history-remove-btn {
+                            background: transparent;
+                            border: none;
+                            color: var(--text-secondary, #888);
+                            cursor: pointer;
+                            padding: 0.15rem 0.35rem;
+                            border-radius: 4px;
+                            font-size: 0.8rem;
+                            line-height: 1;
+                            flex-shrink: 0;
+                            transition: color 0.2s;
+                        }
+
+                        .history-remove-btn:hover {
+                            color: #e81c1c;
                         }
 
                         .anime-image {
@@ -512,9 +619,27 @@
                             line-height: 1.3;
                         }
 
-                        /* Smaller text for history cards */
-                        .history-card .anime-name {
+                        /* Image text placeholder (shown when both TMDB & Discord images fail) */
+                        .img-text-placeholder {
+                            position: absolute;
+                            inset: 0;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            text-align: center;
+                            padding: 0.6rem;
                             font-size: 0.85rem;
+                            font-weight: 700;
+                            color: #fff;
+                            background: linear-gradient(135deg, #1a1a2e 0%, #2d1b69 100%);
+                            border-radius: inherit;
+                            line-height: 1.3;
+                            word-break: break-word;
+                            hyphens: auto;
+                        }
+
+                        .history-thumb-wrap .img-text-placeholder {
+                            font-size: 0.7rem;
                         }
 
                         .anime-genres {
@@ -536,34 +661,6 @@
                             backdrop-filter: blur(4px);
                         }
 
-                        /* History Card Specific */
-                        .history-timestamp {
-                            position: absolute;
-                            top: 8px;
-                            right: 8px;
-                            background: rgba(0, 0, 0, 0.75);
-                            padding: 0.2rem 0.5rem;
-                            border-radius: 5px;
-                            font-size: 0.55rem;
-                            font-weight: 700;
-                            color: var(--accent-soft);
-                            border: 1px solid var(--border-accent);
-                            backdrop-filter: blur(4px);
-                            z-index: 2;
-                        }
-
-                        .history-episode {
-                            position: absolute;
-                            bottom: 8px;
-                            right: 8px;
-                            background: var(--accent);
-                            padding: 0.2rem 0.5rem;
-                            border-radius: 5px;
-                            font-size: 0.55rem;
-                            font-weight: 700;
-                            color: white;
-                            z-index: 2;
-                        }
 
                         /* Anime Detail View */
                         .anime-detail {
@@ -2442,10 +2539,10 @@
                                 flex: 0 0 calc(20% - 0.6rem);
                             }
 
-                            /* History grid maintains more columns on desktop */
-                            .history-grid {
-                                grid-template-columns: repeat(5, 1fr) !important;
-                                gap: 1rem;
+                            /* History list - tighter thumb on desktop */
+                            .history-thumb-wrap {
+                                flex: 0 0 200px;
+                                width: 200px;
                             }
 
                             .anime-name {
@@ -2455,7 +2552,7 @@
                         }
 
                         @media (max-width: 1023px) and (min-width: 769px) {
-                            .home-grid, .history-grid {
+                            .home-grid {
                                 grid-template-columns: repeat(3, 1fr) !important;
                             }
                         }
@@ -2470,22 +2567,12 @@
                                 font-size: 1.8rem;
                             }
 
-                            .home-grid, .history-grid {
+                            .home-grid {
                                 grid-template-columns: repeat(3, 1fr) !important;
                                 gap: 0.5rem;
                             }
 
-                            /* Remove scaling on mobile for history cards */
-                            .history-card {
-                                transform: scale(1);
-                                margin: 0;
-                            }
-
-                            .history-card:hover {
-                                transform: scale(1) translateY(-10px);
-                            }
-
-                            .anime-card, .history-card {
+                            .anime-card {
                                 aspect-ratio: 2/3;
                             }
 
@@ -2494,18 +2581,23 @@
                                 -webkit-line-clamp: 2;
                             }
 
-                            .history-card .anime-name {
-                                font-size: 0.7rem;
-                            }
-
                             .genre-tag {
                                 font-size: 0.5rem;
                                 padding: 0.1rem 0.3rem;
                             }
 
-                            .history-timestamp, .history-episode {
-                                font-size: 0.5rem;
-                                padding: 0.1rem 0.3rem;
+                            /* Larger history thumbnails on mobile */
+                            .history-thumb-wrap {
+                                flex: 0 0 150px;
+                                width: 150px;
+                            }
+
+                            .history-anime-name {
+                                font-size: 0.82rem;
+                            }
+
+                            .history-ep-title {
+                                font-size: 0.7rem;
                             }
 
                             .detail-header {
@@ -2597,9 +2689,14 @@
 
                         /* Ensure 3 columns on very small devices */
                         @media (max-width: 360px) {
-                            .home-grid, .history-grid {
+                            .home-grid {
                                 grid-template-columns: repeat(3, 1fr) !important;
                                 gap: 0.2rem;
+                            }
+
+                            .history-thumb-wrap {
+                                flex: 0 0 90px;
+                                width: 90px;
                             }
 
                             .anime-name {
@@ -2745,7 +2842,7 @@
                                 <h2 class="history-title">History</h2>
                                 <button class="clear-history-btn" id="clearHistoryBtn">Clear</button>
                             </div>
-                            <div id="historyItems" style="display: contents;"></div>
+                            <div id="historyItems"></div>
                         </div>
 
                         <!-- Main Content (Video Player and Episodes + Synopsis below) -->
@@ -2866,10 +2963,30 @@
 
                     <script>
                         // ── Image fallback helper ─────────────────────────────────────────
-                        // Usage: onerror="imgFallback(this)"  data-fallback="<fallback-url>"
+                        // Called via onerror="imgFallback(this)" (el = element) OR as a
+                        // re-assigned el.onerror handler (el = Event). Normalise both.
                         function imgFallback(el) {
+                            if (el instanceof Event) el = el.currentTarget || el.target;
+                            if (!el || !el.dataset) return;
                             el.onerror = null;
-                            el.src = el.dataset.fallback || 'https://via.placeholder.com/300x450?text=No+Image';
+                            const fallback = el.dataset.fallback;
+                            if (fallback && fallback !== el.src && !el.dataset.fallbackTried) {
+                                el.dataset.fallbackTried = '1';
+                                el.onerror = imgFallback;
+                                el.src = fallback;
+                                return;
+                            }
+                            // Both images failed — show anime name as styled text
+                            el.style.display = 'none';
+                            const card = el.closest(
+                                '.anime-card, .history-thumb-wrap, .seasonal-card, .ra-card, .franchise-card, .bookmark-card'
+                            );
+                            if (card && !card.querySelector('.img-text-placeholder')) {
+                                const ph = document.createElement('div');
+                                ph.className = 'img-text-placeholder';
+                                ph.textContent = el.alt || '';
+                                card.insertBefore(ph, card.firstChild);
+                            }
                         }
                     </script>
                     <script>
@@ -3488,7 +3605,23 @@
                             }
                         }
 
-                        // Display watch history
+                        // Display watch history — YouTube style
+                        // Format seconds → "MM:SS"
+                        function fmtTime(sec) {
+                            sec = Math.floor(sec || 0);
+                            const m = Math.floor(sec / 60), s = sec % 60;
+                            return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+                        }
+
+                        // Trim text to first N words, appending "…" if truncated
+                        function trimWords(text, n) {
+                            if (!text) return '';
+                            const words = text.trim().split(/\s+/);
+                            if (words.length <= n) return text.trim();
+                            return words.slice(0, n).join(' ') + '…';
+                        }
+
+                        // Display watch history — YouTube style
                         function displayWatchHistory() {
                             if (!historyItems) return;
 
@@ -3499,30 +3632,62 @@
 
                             historyItems.innerHTML = '';
 
-                            watchHistory.forEach(entry => {
+                            watchHistory.forEach((entry, idx) => {
                                 const card = document.createElement('div');
                                 card.className = 'history-card';
                                 card.dataset.channel = entry.channelName;
                                 card.dataset.episode = entry.episodeNumber;
 
-                                // Format timestamp
-                                const timestamp = new Date(entry.timestamp);
-                                const timeAgo = getTimeAgo(timestamp);
-
+                                const timeAgo = getTimeAgo(new Date(entry.timestamp));
                                 const _histMeta = animeMetadata[entry.channelName];
+                                const thumb = entry.episodeThumbnail || (_histMeta && _histMeta.tmdbPosterUrl) || entry.imageUrl || '';
+                                const fallbackThumb = entry.imageUrl || (_histMeta && _histMeta.tmdbPosterUrl) || '';
+                                const progress = entry.duration ? Math.min((entry.videoTimestamp / entry.duration) * 100, 100) : 0;
+                                const epLabel = entry.episodeNumber % 1 !== 0
+                                    ? String(entry.episodeNumber)
+                                    : String(entry.episodeNumber).padStart(2, '0');
+
+                                // Time display: "03:02/24:00" — only when duration known
+                                const timeDisplay = entry.duration
+                                    ? `${fmtTime(entry.videoTimestamp)}/${fmtTime(entry.duration)}`
+                                    : null;
+
+                                // Synopsis: trim episode title to 9 words; blank if absent
+                                const synopsis = entry.episodeTitle
+                                    ? trimWords(entry.episodeTitle, 9)
+                                    : '';
+
                                 card.innerHTML = `
-                                    <img src="${_histMeta?.tmdbPosterUrl || entry.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}" 
-                                         alt="${entry.animeName}" 
-                                         class="anime-image"
-                                         loading="lazy"
-                                         data-fallback="${entry.imageUrl || 'https://via.placeholder.com/300x450?text=No+Image'}"
-                                         onerror="imgFallback(this)">
-                                    <span class="history-timestamp">${timeAgo}</span>
-                                    <span class="history-episode">EP ${entry.episodeNumber % 1 !== 0 ? entry.episodeNumber : entry.episodeNumber.toString().padStart(2, '0')}</span>
-                                    <div class="anime-info">
-                                        <div class="anime-name">${entry.animeName}</div>
+                                    <div class="history-thumb-wrap">
+                                        <img src="${thumb}"
+                                             alt="${entry.animeName}"
+                                             class="history-thumb"
+                                             loading="lazy"
+                                             data-fallback="${fallbackThumb}"
+                                             onerror="imgFallback(this)">
+                                        <span class="history-ep-num">EP ${epLabel}</span>
+                                        ${timeDisplay ? `<span class="history-ep-badge">${timeDisplay}</span>` : ''}
+                                        <div class="history-progress-track">
+                                            <div class="history-progress-bar" style="width:${progress.toFixed(1)}%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="history-info">
+                                        <div class="history-info-top">
+                                            <div class="history-anime-name">${entry.animeName}</div>
+                                            <button class="history-remove-btn" title="Remove from history" data-idx="${idx}">✕</button>
+                                        </div>
+                                        ${synopsis ? `<div class="history-ep-title">${synopsis}</div>` : ''}
+                                        <div class="history-meta">${timeAgo}</div>
                                     </div>
                                 `;
+
+                                // Per-item remove (stop propagation so card click doesn't fire)
+                                card.querySelector('.history-remove-btn').addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    watchHistory.splice(idx, 1);
+                                    saveWatchHistory();
+                                    displayWatchHistory();
+                                });
 
                                 card.addEventListener('click', () => {
                                     const metadata = animeMetadata[entry.channelName];
