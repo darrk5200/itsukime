@@ -2522,7 +2522,112 @@
                         }
 
                         /* Desktop Styles */
+                        .bookmark-grid {
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 1.5rem;
+                            margin-top: 1rem;
+                        }
+
+                        /* ── Timestamp Bookmark Modal ─────────────────── */
+                        .ts-bm-backdrop {
+                            position: fixed; inset: 0;
+                            background: rgba(0,0,0,0.62);
+                            z-index: 9500;
+                            display: flex; align-items: center; justify-content: center;
+                        }
+                        .ts-bm-modal {
+                            background: var(--bg-card);
+                            border: 1px solid var(--border-accent);
+                            border-radius: 12px; padding: 1.4rem;
+                            width: min(92vw, 360px);
+                            display: flex; flex-direction: column; gap: 0.85rem;
+                        }
+                        .ts-bm-title {
+                            font-size: 0.82rem; font-weight: 800;
+                            color: var(--accent-soft); text-transform: uppercase;
+                            letter-spacing: 1px; margin: 0;
+                        }
+                        .ts-bm-meta { font-size: 0.76rem; color: var(--text-dim); line-height: 1.5; }
+                        .ts-bm-note {
+                            background: var(--bg-primary);
+                            border: 1px solid var(--border-accent);
+                            border-radius: 7px; color: var(--text-primary);
+                            font-size: 0.82rem; padding: 0.5rem 0.7rem;
+                            resize: vertical; width: 100%; box-sizing: border-box;
+                            min-height: 58px; font-family: inherit;
+                        }
+                        .ts-bm-note:focus { outline: none; border-color: var(--accent); }
+                        .ts-bm-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+                        .ts-bm-save {
+                            background: var(--accent); color: #fff; border: none;
+                            border-radius: 7px; padding: 0.38rem 1.1rem;
+                            font-size: 0.8rem; font-weight: 700; cursor: pointer;
+                        }
+                        .ts-bm-cancel {
+                            background: transparent; color: var(--text-dim);
+                            border: 1px solid var(--border-color);
+                            border-radius: 7px; padding: 0.38rem 0.9rem;
+                            font-size: 0.8rem; font-weight: 700; cursor: pointer;
+                        }
+                        /* ── Bookmarks Load More ──────────────────────── */
+                        .bm-load-more-btn {
+                            display: block; margin: 1rem auto 0;
+                            background: transparent;
+                            border: 1px solid var(--border-accent);
+                            color: var(--accent-soft); border-radius: 8px;
+                            padding: 0.38rem 1.4rem; font-size: 0.78rem;
+                            font-weight: 700; cursor: pointer; transition: background 0.15s;
+                        }
+                        .bm-load-more-btn:hover { background: var(--bg-card); }
+                        /* ── Timestamp Bookmark Items ─────────────────── */
+                        .ts-section-header {
+                            display: flex; align-items: center; gap: 0.75rem;
+                            flex-wrap: wrap;
+                            border-bottom: 1px solid var(--border-accent);
+                            padding-bottom: 0.5rem; margin: 1.75rem 0 0.75rem;
+                        }
+                        .ts-search {
+                            margin-left: auto;
+                            background: var(--bg-card);
+                            border: 1px solid var(--border-accent);
+                            border-radius: 7px; padding: 0.28rem 0.6rem;
+                            font-size: 0.74rem; color: var(--text-primary);
+                            outline: none; width: 140px;
+                        }
+                        .ts-search:focus { border-color: var(--accent); }
+                        .ts-empty { color: #666; font-size: 0.8rem; padding: 0.4rem 0; }
+                        .ts-item {
+                            display: flex; align-items: flex-start; gap: 0.7rem;
+                            padding: 0.6rem 0.4rem;
+                            border-bottom: 1px solid var(--border-color);
+                            cursor: pointer; border-radius: 6px;
+                            transition: background 0.12s;
+                        }
+                        .ts-item:hover { background: var(--bg-card); }
+                        .ts-time {
+                            background: var(--accent); color: #fff;
+                            font-size: 0.7rem; font-weight: 800;
+                            border-radius: 5px; padding: 0.12rem 0.42rem;
+                            min-width: 42px; text-align: center;
+                            margin-top: 2px; flex-shrink: 0; font-variant-numeric: tabular-nums;
+                        }
+                        .ts-info { flex: 1; min-width: 0; }
+                        .ts-anime-name { font-size: 0.78rem; font-weight: 700; color: var(--text-primary); }
+                        .ts-ep { font-size: 0.7rem; color: var(--text-primary); opacity: 0.75; margin-top: 1px; }
+                        .ts-note { font-size: 0.73rem; color: var(--accent-soft); margin-top: 3px; font-style: italic; }
+                        .ts-del {
+                            background: none; border: none; color: var(--text-dim);
+                            cursor: pointer; font-size: 0.82rem; padding: 0.1rem 0.28rem;
+                            border-radius: 4px; opacity: 0.45; flex-shrink: 0;
+                        }
+                        .ts-del:hover { opacity: 1; color: #e53e3e; }
+
                         @media (min-width: 1024px) {
+                            .bookmark-grid {
+                                grid-template-columns: repeat(5, 1fr);
+                                gap: 1rem;
+                            }
                             .continue-watching-section {
                                 margin-bottom: 2rem;
                             }
@@ -2897,6 +3002,7 @@
                                                     <a id="downloadLink" href="#" style="display:block; padding:0.4rem 0.75rem; color:#FA4343; font-size:0.8rem; font-weight:800; text-decoration:none; border-radius:5px; background:rgba(250,67,67,0.12); margin:0 0.1rem 0.1rem;">⬇ Download Video</a>
                                                 </div>
                                             </div>
+                                            <button class="ctrl-btn" id="ctrlTsBmBtn" title="Bookmark this moment" style="font-size:0.85rem;">📍</button>
                                             <button class="ctrl-btn" id="ctrlFsBtn" title="Fullscreen">⛶</button>
                                         </div>
                                     </div>
@@ -3036,6 +3142,9 @@
                         let watchHistory = [];
                         let continueWatching = [];
                         let bookmarks = [];
+                        let timestampBookmarks = [];
+                        let currentEpisodeNumber = null;
+                        let currentEpisodeTitle = '';
 
                         // ── Multi-Profile System ──────────────────────────────────────────
                         const PROFILE_COUNT_MAX = 4;
@@ -3101,7 +3210,7 @@
                             const meta = getProfilesMeta();
                             meta.active = idx;
                             saveProfilesMeta(meta);
-                            watchHistory = []; continueWatching = []; bookmarks = [];
+                            watchHistory = []; continueWatching = []; bookmarks = []; timestampBookmarks = [];
                             loadWatchHistory();
                             displayContinueWatching();
                             const footerNav = document.querySelector('.footer-nav');
@@ -3372,6 +3481,10 @@
                             if (savedBookmarks) {
                                 bookmarks = JSON.parse(savedBookmarks);
                             }
+                            const savedTsBm = localStorage.getItem(getPKey('timestamp_bookmarks'));
+                            if (savedTsBm) {
+                                timestampBookmarks = JSON.parse(savedTsBm);
+                            }
                         }
 
                         // Save watch history to localStorage (profile-aware)
@@ -3379,6 +3492,91 @@
                             localStorage.setItem(getPKey('history'), JSON.stringify(watchHistory));
                             localStorage.setItem(getPKey('continue_watching'), JSON.stringify(continueWatching));
                             localStorage.setItem(getPKey('bookmarks'), JSON.stringify(bookmarks));
+                            localStorage.setItem(getPKey('timestamp_bookmarks'), JSON.stringify(timestampBookmarks));
+                        }
+
+                        // ── Timestamp Bookmarks ──────────────────────────────────────────────
+
+                        function saveTimestampBookmark(note) {
+                            if (!currentChannel || !videoPlayer.duration) return;
+                            timestampBookmarks.unshift({
+                                channelName: currentChannel,
+                                animeName: currentAnimeMetadata ? currentAnimeMetadata.name : currentChannel,
+                                episodeNumber: currentEpisodeNumber,
+                                episodeTitle: currentEpisodeTitle,
+                                timestamp: Math.floor(videoPlayer.currentTime),
+                                note: note.trim(),
+                                addedAt: Date.now()
+                            });
+                            saveWatchHistory();
+                        }
+
+                        function showTimestampBmModal() {
+                            if (!currentChannel || !videoPlayer.duration) return;
+                            videoPlayer.pause();
+                            const ts = Math.floor(videoPlayer.currentTime);
+                            const animeName = currentAnimeMetadata ? currentAnimeMetadata.name : currentChannel;
+                            const epLabel = currentEpisodeNumber !== null
+                                ? 'EP ' + String(currentEpisodeNumber).padStart(2, '0')
+                                : '';
+                            const existing = document.getElementById('tsBmBackdrop');
+                            if (existing) existing.remove();
+                            const backdrop = document.createElement('div');
+                            backdrop.className = 'ts-bm-backdrop';
+                            backdrop.id = 'tsBmBackdrop';
+                            backdrop.innerHTML =
+                                '<div class="ts-bm-modal">' +
+                                    '<p class="ts-bm-title">📍 Bookmark Timestamp</p>' +
+                                    '<p class="ts-bm-meta"><strong>' + animeName + '</strong><br>' +
+                                        (epLabel ? epLabel + (currentEpisodeTitle ? ' · ' + currentEpisodeTitle : '') + '<br>' : '') +
+                                        '<span style="color:var(--accent);font-weight:800;">' + fmtTime(ts) + '</span>' +
+                                    '</p>' +
+                                    '<textarea class="ts-bm-note" id="tsBmNoteInput" placeholder="Add a note… (optional)" rows="3"></textarea>' +
+                                    '<div class="ts-bm-actions">' +
+                                        '<button class="ts-bm-cancel" id="tsBmCancelBtn">Cancel</button>' +
+                                        '<button class="ts-bm-save" id="tsBmSaveBtn">Save</button>' +
+                                    '</div>' +
+                                '</div>';
+                            const fsRoot = document.fullscreenElement || document.webkitFullscreenElement || document.body;
+                            fsRoot.appendChild(backdrop);
+                            const noteInput = backdrop.querySelector('#tsBmNoteInput');
+                            noteInput.focus();
+                            backdrop.querySelector('#tsBmSaveBtn').onclick = function() {
+                                saveTimestampBookmark(noteInput.value);
+                                backdrop.remove();
+                            };
+                            backdrop.querySelector('#tsBmCancelBtn').onclick = function() { backdrop.remove(); };
+                            backdrop.addEventListener('click', function(e) { if (e.target === backdrop) backdrop.remove(); });
+                        }
+
+                        window.jumpToTimestamp = function(idx) {
+                            const ts = timestampBookmarks[idx];
+                            if (!ts) return;
+                            const metadata = animeMetadata[ts.channelName];
+                            if (!metadata) return;
+                            showAnimeDetail(metadata, ts.channelName, ts.episodeNumber || 1);
+                            const seekTo = ts.timestamp;
+                            const seekHandler = function() {
+                                videoPlayer.currentTime = seekTo;
+                                videoPlayer.removeEventListener('loadedmetadata', seekHandler);
+                            };
+                            videoPlayer.addEventListener('loadedmetadata', seekHandler);
+                        };
+
+                        window.deleteTimestampBm = function(idx, e) {
+                            e.stopPropagation();
+                            timestampBookmarks.splice(idx, 1);
+                            saveWatchHistory();
+                            const q = document.getElementById('tsBmSearch') ? document.getElementById('tsBmSearch').value : '';
+                            const container = document.getElementById('tsBmList');
+                            if (container && typeof buildTsHtmlGlobal === 'function') {
+                                container.innerHTML = buildTsHtmlGlobal(q);
+                            }
+                        };
+
+                        const ctrlTsBmBtn = document.getElementById('ctrlTsBmBtn');
+                        if (ctrlTsBmBtn) {
+                            ctrlTsBmBtn.addEventListener('click', showTimestampBmModal);
                         }
 
                         // Add to watch history
@@ -3664,9 +3862,9 @@
                                     ? `${fmtTime(entry.videoTimestamp)}/${fmtTime(entry.duration)}`
                                     : null;
 
-                                // Synopsis: TMDB episode description trimmed to 9 words; blank if absent
+                                // Synopsis: TMDB episode description trimmed to 14 words; blank if absent
                                 const synopsis = entry.episodeDescription
-                                    ? trimWords(entry.episodeDescription, 9)
+                                    ? trimWords(entry.episodeDescription, 14)
                                     : '';
 
                                 card.innerHTML = `
@@ -3856,46 +4054,112 @@
 
                             let bookmarkSort = localStorage.getItem(getPKey('bookmark_sort')) || 'recent';
 
-                            function buildBookmarksListHTML(sort) {
+                            const pageSize = window.innerWidth >= 1024 ? 10 : 9;
+                            let bmPage = 1;
+
+                            function buildAnimeGridHTML(sort, page) {
                                 if (bookmarks.length === 0) {
-                                    return '<p style="color: #666; margin-top: 1rem;">No bookmarked anime yet</p>';
+                                    return '<p style="color:#666;margin-top:1rem;">No bookmarked anime yet</p>';
                                 }
                                 const sorted = [...bookmarks];
                                 if (sort === 'az') sorted.sort((a, b) => a.name.localeCompare(b.name));
                                 else if (sort === 'za') sorted.sort((a, b) => b.name.localeCompare(a.name));
                                 else sorted.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
-                                let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:1rem;">';
-                                sorted.forEach(anime => {
+                                const visible = sorted.slice(0, page * pageSize);
+                                let html = '<div class="bookmark-grid">';
+                                visible.forEach(anime => {
                                     const _bmMeta = animeMetadata[anime.channelName];
-                                    html += `<div class="anime-card" onclick="showAnimeDetailByChannel('${anime.channelName}')">
-                                        <img src="${_bmMeta?.tmdbPosterUrl || anime.imageUrl}" alt="${anime.name}" class="anime-image" data-fallback="${anime.imageUrl}" onerror="imgFallback(this)">
-                                        <div class="anime-info"><div class="anime-name">${anime.name}</div></div>
-                                    </div>`;
+                                    html += '<div class="anime-card" onclick="showAnimeDetailByChannel(\'' + anime.channelName + '\')">'
+                                        + '<img src="' + (_bmMeta?.tmdbPosterUrl || anime.imageUrl) + '" alt="' + anime.name + '" class="anime-image" data-fallback="' + anime.imageUrl + '" onerror="imgFallback(this)">'
+                                        + '<div class="anime-info"><div class="anime-name">' + anime.name + '</div></div>'
+                                        + '</div>';
                                 });
                                 html += '</div>';
+                                if (sorted.length > visible.length) {
+                                    html += '<button class="bm-load-more-btn" id="bmLoadMoreBtn">Load More (' + (sorted.length - visible.length) + ' more)</button>';
+                                }
                                 return html;
                             }
 
-                            historyItems.innerHTML = `
-                                <div style="padding: 0 0.25rem;">
-                                    <div style="display:flex; align-items:center; justify-content:space-between; border-bottom: 1px solid var(--border-accent); padding-bottom: 0.5rem; margin-bottom: 0.5rem; margin-top: 0.5rem;">
-                                        <h4 style="color: var(--accent-soft); font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin:0;">Bookmarked Anime</h4>
-                                        <select id="bookmarkSortSelectNav" style="background:var(--bg-card);color:var(--text-dim);border:1px solid var(--border-accent);border-radius:6px;padding:0.2rem 0.4rem;font-size:0.72rem;font-weight:700;cursor:pointer;">
-                                            <option value="recent" ${bookmarkSort==='recent'?'selected':''}>Recently Added</option>
-                                            <option value="az"     ${bookmarkSort==='az'?'selected':''}>A → Z</option>
-                                            <option value="za"     ${bookmarkSort==='za'?'selected':''}>Z → A</option>
-                                        </select>
-                                    </div>
-                                    <div id="bookmarksContainerNav">${buildBookmarksListHTML(bookmarkSort)}</div>
-                                </div>
-                            `;
+                            function buildTsHtml(filter) {
+                                const lc = (filter || '').toLowerCase().trim();
+                                const list = lc
+                                    ? timestampBookmarks.filter(function(t) {
+                                        return (t.note && t.note.toLowerCase().includes(lc))
+                                            || (t.animeName && t.animeName.toLowerCase().includes(lc))
+                                            || (t.channelName && t.channelName.toLowerCase().includes(lc))
+                                            || (t.episodeTitle && t.episodeTitle.toLowerCase().includes(lc));
+                                      })
+                                    : timestampBookmarks.slice();
+                                if (list.length === 0) {
+                                    return '<p class="ts-empty">' + (lc ? 'No matches found.' : 'No timestamp bookmarks yet. Pause a video and tap 📍 to save a moment.') + '</p>';
+                                }
+                                let html = '';
+                                list.forEach(function(ts) {
+                                    const realIdx = timestampBookmarks.indexOf(ts);
+                                    const epLabel = ts.episodeNumber !== null && ts.episodeNumber !== undefined
+                                        ? 'EP ' + String(ts.episodeNumber).padStart(2, '0') : '';
+                                    html += '<div class="ts-item" onclick="jumpToTimestamp(' + realIdx + ')">'
+                                        + '<div class="ts-time">' + fmtTime(ts.timestamp) + '</div>'
+                                        + '<div class="ts-info">'
+                                        +   '<div class="ts-anime-name">' + (ts.animeName || ts.channelName) + '</div>'
+                                        +   '<div class="ts-ep">' + epLabel + (ts.episodeTitle ? (epLabel ? ' · ' : '') + ts.episodeTitle : '') + '</div>'
+                                        +   (ts.note ? '<div class="ts-note">&ldquo;' + ts.note + '&rdquo;</div>' : '')
+                                        + '</div>'
+                                        + '<button class="ts-del" onclick="deleteTimestampBm(' + realIdx + ',event)" title="Remove">✕</button>'
+                                        + '</div>';
+                                });
+                                return html;
+                            }
+
+                            // expose so deleteTimestampBm can refresh
+                            window.buildTsHtmlGlobal = buildTsHtml;
+
+                            historyItems.innerHTML =
+                                '<div style="padding:0 0.25rem;">'
+                                + '<div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-accent);padding-bottom:0.5rem;margin-bottom:0.5rem;margin-top:0.5rem;">'
+                                +   '<h4 style="color:var(--accent-soft);font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin:0;">Bookmarked Anime</h4>'
+                                +   '<select id="bookmarkSortSelectNav" style="background:var(--bg-card);color:var(--text-dim);border:1px solid var(--border-accent);border-radius:6px;padding:0.2rem 0.4rem;font-size:0.72rem;font-weight:700;cursor:pointer;">'
+                                +     '<option value="recent"' + (bookmarkSort==='recent'?' selected':'') + '>Recently Added</option>'
+                                +     '<option value="az"' + (bookmarkSort==='az'?' selected':'') + '>A → Z</option>'
+                                +     '<option value="za"' + (bookmarkSort==='za'?' selected':'') + '>Z → A</option>'
+                                +   '</select>'
+                                + '</div>'
+                                + '<div id="bookmarksContainerNav">' + buildAnimeGridHTML(bookmarkSort, bmPage) + '</div>'
+                                + '<div class="ts-section-header">'
+                                +   '<h4 style="color:var(--accent-soft);font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin:0;">Bookmarked Timestamps</h4>'
+                                +   '<input type="text" class="ts-search" id="tsBmSearch" placeholder="Search anime, notes…">'
+                                + '</div>'
+                                + '<div id="tsBmList">' + buildTsHtml('') + '</div>'
+                                + '</div>';
+
+                            function rewireLoadMore() {
+                                const btn = document.getElementById('bmLoadMoreBtn');
+                                if (btn) {
+                                    btn.onclick = function() {
+                                        bmPage++;
+                                        document.getElementById('bookmarksContainerNav').innerHTML = buildAnimeGridHTML(bookmarkSort, bmPage);
+                                        rewireLoadMore();
+                                    };
+                                }
+                            }
+                            rewireLoadMore();
 
                             const sortSel = document.getElementById('bookmarkSortSelectNav');
                             if (sortSel) {
                                 sortSel.addEventListener('change', function() {
                                     bookmarkSort = this.value;
+                                    bmPage = 1;
                                     localStorage.setItem(getPKey('bookmark_sort'), bookmarkSort);
-                                    document.getElementById('bookmarksContainerNav').innerHTML = buildBookmarksListHTML(bookmarkSort);
+                                    document.getElementById('bookmarksContainerNav').innerHTML = buildAnimeGridHTML(bookmarkSort, bmPage);
+                                    rewireLoadMore();
+                                });
+                            }
+
+                            const tsSearch = document.getElementById('tsBmSearch');
+                            if (tsSearch) {
+                                tsSearch.addEventListener('input', function() {
+                                    document.getElementById('tsBmList').innerHTML = buildTsHtml(this.value);
                                 });
                             }
                         }
@@ -3979,7 +4243,7 @@
                                 else if (sort === 'za') sorted.sort((a, b) => b.name.localeCompare(a.name));
                                 else sorted.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
 
-                                let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:1rem;">';
+                                let html = '<div class="bookmark-grid">';
                                 sorted.forEach(anime => {
                                     const _bm2Meta = animeMetadata[anime.channelName];
                                     html += `
@@ -4627,6 +4891,8 @@
                             // Update video player
                             videoPlayer.src = video.url;
                             videoPlayer.load();
+                            currentEpisodeNumber = video.episode || 1;
+                            currentEpisodeTitle = video.tmdbTitle || video.title || '';
 
                             // Add event listener to start from saved timestamp if applicable
                             const entry = continueWatching.find(e => e.channelName === currentChannel && e.episodeNumber === video.episode);
