@@ -2986,7 +2986,9 @@
                                     </div>
                                     <div class="ctrl-row">
                                         <div class="ctrl-left">
+                                            <button class="ctrl-btn" id="ctrlPrevEpBtn" title="Previous Episode" style="display:none;font-size:0.7rem;font-weight:800;padding:0.2rem 0.4rem;">Prev</button>
                                             <button class="ctrl-btn" id="ctrlPlayBtn">▶</button>
+                                            <button class="ctrl-btn" id="ctrlNextEpBtn" title="Next Episode" style="display:none;font-size:0.7rem;font-weight:800;padding:0.2rem 0.4rem;">Next</button>
                                             <span class="ctrl-time" id="ctrlTime">0:00 / 0:00</span>
                                         </div>
                                         <div class="ctrl-right">
@@ -4946,7 +4948,34 @@
                                 title: video.title,
                                 episode: video.episode
                             });
+
+                            // Update Prev / Next episode buttons
+                            const prevEpBtn = document.getElementById('ctrlPrevEpBtn');
+                            const nextEpBtn = document.getElementById('ctrlNextEpBtn');
+                            if (prevEpBtn && nextEpBtn && currentVideos.length > 0) {
+                                const idx = currentVideos.findIndex(v => v.episode === video.episode);
+                                prevEpBtn.style.display = idx > 0 ? '' : 'none';
+                                nextEpBtn.style.display = idx < currentVideos.length - 1 ? '' : 'none';
+                                prevEpBtn._videoIdx = idx;
+                                nextEpBtn._videoIdx = idx;
+                            }
                         }
+
+                        // Prev / Next episode button handlers
+                        document.getElementById('ctrlPrevEpBtn').addEventListener('click', () => {
+                            const btn = document.getElementById('ctrlPrevEpBtn');
+                            const idx = btn._videoIdx;
+                            if (idx > 0 && currentVideos[idx - 1]) {
+                                playVideo(currentVideos[idx - 1], currentChannelName.textContent);
+                            }
+                        });
+                        document.getElementById('ctrlNextEpBtn').addEventListener('click', () => {
+                            const btn = document.getElementById('ctrlNextEpBtn');
+                            const idx = btn._videoIdx;
+                            if (idx !== undefined && idx < currentVideos.length - 1 && currentVideos[idx + 1]) {
+                                playVideo(currentVideos[idx + 1], currentChannelName.textContent);
+                            }
+                        });
 
                         // Surprise Me
                         document.getElementById('surpriseBtn').addEventListener('click', function() {
