@@ -5748,13 +5748,13 @@
 
                             // ── Hold-to-2× speed ──────────────────────────────────────────
                             (function () {
-                                const HOLD_DELAY = 300; // ms before 2× kicks in
+                                const HOLD_DELAY = 400; // ms before 2× kicks in
                                 const HOLD_SPEED = 2;
 
                                 // Badge element
                                 const badge = document.createElement('div');
                                 badge.className = 'hold-speed-badge';
-                                badge.innerHTML = '⚡ 2× Speed';
+                                badge.innerHTML = '2×';
                                 container.style.position = container.style.position || 'relative';
                                 container.appendChild(badge);
 
