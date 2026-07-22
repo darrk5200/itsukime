@@ -743,6 +743,8 @@
                         }
 
                         #videoPlayer {
+                            -webkit-touch-callout: none; /* iOS long-press menu */
+                            user-select: none;
                             width: 100%;
                             display: block;
                             background: black;
@@ -5787,10 +5789,13 @@
                                 container.addEventListener('mouseup', endHold);
                                 container.addEventListener('mouseleave', endHold);
 
-                                // Touch
-                                container.addEventListener('touchstart', startHold, { passive: true });
+                                // Touch — non-passive so we can suppress context menu during hold
+                                container.addEventListener('touchstart', startHold, { passive: false });
                                 container.addEventListener('touchend', endHold);
                                 container.addEventListener('touchcancel', endHold);
+
+                                // Prevent browser long-press download/context popup on the video
+                                vid.addEventListener('contextmenu', e => e.preventDefault());
                             })();
 
                             // ── Download ──────────────────────────────────────────────────
