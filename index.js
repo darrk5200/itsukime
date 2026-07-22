@@ -2022,6 +2022,55 @@
                 // ANALYTICS ROUTES
                 // ============================================
 
+                app.get("/api/skip-times", async (req, res) => {
+                    const { animeName, episode } = req.query;
+                    if (!animeName || !episode) return res.json({ found: false });
+
+                    // Strip punctuation/suffixes to improve AniList match rate
+                    function normalizeAnimeName(name) {
+                        return name
+                            .replace(/[-–—:]/g, ' ')          // dashes & colons → space
+                            .replace(/\bpart\s*(i{1,3}|iv|v|\d+)\b/gi, '') // "Part III", "Part 3" etc.
+                            .replace(/\bseason\s*\d+\b/gi, '') // "Season 4" etc.
+                            .replace(/[^\w\s]/g, ' ')           // remaining punctuation → space
+                            .replace(/\s+/g, ' ')
+                            .trim();
+                    }
+
+                    async function anilistLookup(searchName) {
+                        const r = await fetch('https://graphql.anilist.co', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                query: 'query($s:String){Media(search:$s,type:ANIME,format_in:[TV,TV_SHORT,ONA]){idMal title{romaji english}}}',
+                                variables: { s: searchName }
+                            })
+                        });
+                        const d = await r.json();
+                        return d?.data?.Media?.idMal || null;
+                    }
+
+                    try {
+                        // Try exact name first, then normalized fallback
+                        let malId = await anilistLookup(animeName);
+                        if (!malId) {
+                            const normalized = normalizeAnimeName(animeName);
+                            if (normalized !== animeName) malId = await anilistLookup(normalized);
+                        }
+                        if (!malId) return res.json({ found: false });
+
+                        // AniSkip → get opening timestamps
+                        const skipRes = await fetch(`https://api.aniskip.com/v2/skip-times/${malId}/${episode}?types[]=op&types[]=ed&episodeLength=0`);
+                        const skipData = await skipRes.json();
+                        if (!skipData.found || !skipData.results?.length) return res.json({ found: false, malId });
+
+                        const op = skipData.results.find(r => r.skipType === 'op');
+                        return res.json({ found: !!op, interval: op ? op.interval : null, malId });
+                    } catch (e) {
+                        return res.json({ found: false, error: e.message });
+                    }
+                });
+
                 app.get("/api/check-status", (req, res) => {
                     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
                     const userId = req.query.userId || '';
