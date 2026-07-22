@@ -800,6 +800,30 @@
                             opacity: 1 !important;
                         }
 
+                        /* Skip Intro button — always visible over video, not hover-gated */
+                        .skip-intro-btn {
+                            position: absolute;
+                            bottom: 58px;
+                            right: 14px;
+                            z-index: 20;
+                            background: rgba(15, 15, 15, 0.45);
+                            color: #fff;
+                            border: 1.5px solid rgba(255,255,255,0.65);
+                            border-radius: 5px;
+                            padding: 0.42rem 1rem;
+                            font-size: 0.82rem;
+                            font-weight: 700;
+                            letter-spacing: 0.3px;
+                            cursor: pointer;
+                            backdrop-filter: blur(6px);
+                            transition: background 0.15s, border-color 0.15s, color 0.15s;
+                        }
+                        .skip-intro-btn:hover {
+                            background: #FA4343;
+                            border-color: #FA4343;
+                            color: #fff;
+                        }
+
                         @keyframes seekFlash {
                             0%   { opacity: 1; transform: translateY(-50%) scale(1); }
                             100% { opacity: 0; transform: translateY(-50%) scale(1.15); }
@@ -911,6 +935,32 @@
 
                         .speed-option:hover { background: rgba(255,255,255,0.1); color: #fff; }
                         .speed-option.active { color: #FA4343; font-weight: 800; }
+
+                        /* Hold-to-2× speed indicator */
+                        .hold-speed-badge {
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%) scale(0.8);
+                            background: rgba(0,0,0,0.72);
+                            color: #fff;
+                            font-size: 1rem;
+                            font-weight: 800;
+                            padding: 0.45rem 1rem;
+                            border-radius: 8px;
+                            pointer-events: none;
+                            opacity: 0;
+                            transition: opacity 0.15s ease, transform 0.15s ease;
+                            z-index: 300;
+                            white-space: nowrap;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.4rem;
+                        }
+                        .hold-speed-badge.visible {
+                            opacity: 1;
+                            transform: translate(-50%, -50%) scale(1);
+                        }
 
                         /* Genre filter bar */
                         .genre-filter-bar {
@@ -2977,6 +3027,7 @@
                                     <source src="" type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
+                                <button id="skipIntroBtn" class="skip-intro-btn" style="display:none;">Skip Intro</button>
                                 <div class="custom-controls" id="customControls">
                                     <div class="ctrl-progress-wrapper" id="ctrlProgressWrapper">
                                         <div class="ctrl-progress-track">
@@ -3157,6 +3208,7 @@
                         let timestampBookmarks = [];
                         let currentEpisodeNumber = null;
                         let currentEpisodeTitle = '';
+                        let currentSkipInterval = null; // { startTime, endTime } for opening intro
 
                         // ── Multi-Profile System ──────────────────────────────────────────
                         const PROFILE_COUNT_MAX = 4;
@@ -4906,6 +4958,16 @@
                             currentEpisodeNumber = video.episode || 1;
                             currentEpisodeTitle = video.tmdbTitle || video.title || '';
 
+                            // Reset skip intro state and fetch new timestamps
+                            currentSkipInterval = null;
+                            document.getElementById('skipIntroBtn').style.display = 'none';
+                            const _skipAnimeName = (currentAnimeMetadata && currentAnimeMetadata.name) ? currentAnimeMetadata.name : displayName;
+                            if (_skipAnimeName && video.episode) {
+                                fetchSkipTimes(_skipAnimeName, video.episode).then(function(interval) {
+                                    currentSkipInterval = interval;
+                                });
+                            }
+
                             // Add event listener to start from saved timestamp if applicable
                             const entry = continueWatching.find(e => e.channelName === currentChannel && e.episodeNumber === video.episode);
                             if (entry && entry.videoTimestamp > 0) {
@@ -4974,6 +5036,43 @@
                             const idx = btn._videoIdx;
                             if (idx !== undefined && idx < currentVideos.length - 1 && currentVideos[idx + 1]) {
                                 playVideo(currentVideos[idx + 1], currentChannelName.textContent);
+                            }
+                        });
+
+                        // ── Skip Intro ────────────────────────────────────────────────────
+                        const skipIntroBtn = document.getElementById('skipIntroBtn');
+                        const _malIdCache = {};
+                        const _skipTimesCache = {};
+
+                        async function fetchSkipTimes(animeName, episode) {
+                            if (!animeName || !episode) return null;
+                            const cacheKey = animeName + '__' + episode;
+                            if (_skipTimesCache.hasOwnProperty(cacheKey)) return _skipTimesCache[cacheKey];
+                            try {
+                                const res = await fetch('/api/skip-times?animeName=' + encodeURIComponent(animeName) + '&episode=' + encodeURIComponent(episode));
+                                if (!res.ok) { _skipTimesCache[cacheKey] = null; return null; }
+                                const data = await res.json();
+                                _skipTimesCache[cacheKey] = (data.found && data.interval) ? data.interval : null;
+                                return _skipTimesCache[cacheKey];
+                            } catch (e) {
+                                _skipTimesCache[cacheKey] = null;
+                                return null;
+                            }
+                        }
+
+                        // Show / hide Skip Intro button based on playback position
+                        videoPlayer.addEventListener('timeupdate', function() {
+                            if (!currentSkipInterval || !skipIntroBtn) return;
+                            const t = videoPlayer.currentTime;
+                            const s = currentSkipInterval.startTime;
+                            const e = currentSkipInterval.endTime;
+                            skipIntroBtn.style.display = (t >= s && t < e - 1) ? '' : 'none';
+                        });
+
+                        skipIntroBtn.addEventListener('click', function() {
+                            if (currentSkipInterval) {
+                                videoPlayer.currentTime = currentSkipInterval.endTime;
+                                skipIntroBtn.style.display = 'none';
                             }
                         });
 
@@ -5644,6 +5743,55 @@
                                 speedPopup.classList.remove('open');
                                 downloadPopup.classList.remove('open');
                             });
+
+                            // ── Hold-to-2× speed ──────────────────────────────────────────
+                            (function () {
+                                const HOLD_DELAY = 300; // ms before 2× kicks in
+                                const HOLD_SPEED = 2;
+
+                                // Badge element
+                                const badge = document.createElement('div');
+                                badge.className = 'hold-speed-badge';
+                                badge.innerHTML = '⚡ 2× Speed';
+                                container.style.position = container.style.position || 'relative';
+                                container.appendChild(badge);
+
+                                let holdTimer = null;
+                                let isHolding = false;
+                                let speedBeforeHold = 1;
+
+                                function startHold(e) {
+                                    // Only trigger on the video itself, not on controls
+                                    if (!e.target.closest('#videoPlayer')) return;
+                                    if (holdTimer) return;
+                                    holdTimer = setTimeout(() => {
+                                        isHolding = true;
+                                        speedBeforeHold = vid.playbackRate;
+                                        vid.playbackRate = HOLD_SPEED;
+                                        badge.classList.add('visible');
+                                    }, HOLD_DELAY);
+                                }
+
+                                function endHold() {
+                                    clearTimeout(holdTimer);
+                                    holdTimer = null;
+                                    if (isHolding) {
+                                        isHolding = false;
+                                        vid.playbackRate = speedBeforeHold;
+                                        badge.classList.remove('visible');
+                                    }
+                                }
+
+                                // Mouse
+                                container.addEventListener('mousedown', startHold);
+                                container.addEventListener('mouseup', endHold);
+                                container.addEventListener('mouseleave', endHold);
+
+                                // Touch
+                                container.addEventListener('touchstart', startHold, { passive: true });
+                                container.addEventListener('touchend', endHold);
+                                container.addEventListener('touchcancel', endHold);
+                            })();
 
                             // ── Download ──────────────────────────────────────────────────
                             const downloadBtn  = document.getElementById('ctrlDownloadBtn');
